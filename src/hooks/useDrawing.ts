@@ -1,5 +1,5 @@
 import { useRef, useCallback, useState } from 'react';
-import { Point, DrawingState, BrushType, Tool, CanvasState } from '../types/drawing';
+import { Point, DrawingState, BrushType, CanvasState } from '../types/drawing';
 
 export const useDrawing = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);

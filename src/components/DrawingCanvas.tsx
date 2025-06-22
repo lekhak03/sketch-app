@@ -1,6 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
 import { useDrawing } from '../hooks/useDrawing';
-import { Point } from '../types/drawing';
 
 interface DrawingCanvasProps {
   className?: string;
