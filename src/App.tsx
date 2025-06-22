@@ -1,14 +1,8 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { Brush, Eraser, Trash2 } from 'lucide-react';
-
-const footerHeight = 40; 
-type Point = { x: number; y: number };
+import { useCanvas } from './hooks/useCanvas';
 
 function App() {
-const canvasRef = useRef<HTMLCanvasElement>(null);
-const [isDrawing, setIsDrawing] = useState(false);
-const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
-const [backgroundColor, setBackgroundColor] = useState('#ffffff');
 
 const backgroundColors = [
   { color: '#ffffff', name: 'White' }, // white
@@ -18,37 +12,21 @@ const backgroundColors = [
   { color: '#f59e0b', name: 'Yellow' }, // yellow
 ];
 
-// Get pen color based on background
-const getPenColor = () => {
-  return backgroundColor === '#1a1a1a' ? '#ffffff' : '#000000';
-};
-const [paths, setPaths] = useState<Point[][]>([]);
-const [currentPath, setCurrentPath] = useState<Point[]>([]);
-// // Initialize canvas
-// useEffect(() => {
-//   const canvas = canvasRef.current;
-//   if (!canvas) return;
+const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
+  const [backgroundColor, setBackgroundColor] = useState('#ffffff');
+  const footerHeight = 40;
 
-//   const resizeCanvas = () => {
-//     canvas.width = window.innerWidth;
-//     canvas.height = window.innerHeight - footerHeight;
-    
-//     const ctx = canvas.getContext('2d');
-//     if (ctx) {
-//       ctx.fillStyle = backgroundColor;
-//       ctx.fillRect(0, 0, canvas.width, canvas.height);
-//     }
-//   };
+  const {
+    canvasRef,
+    startDrawing,
+    draw,
+    paths,
+    stopDrawing,
+    clearCanvas,
+    redrawPaths,
+  } = useCanvas(backgroundColor);
 
-//   resizeCanvas();
-//   window.addEventListener('resize', resizeCanvas);
-
-//   return () => window.removeEventListener('resize', resizeCanvas);
-// }, [backgroundColor]);
-
-// Update background color
-
-useEffect(() => {
+  useEffect(() => {
   const canvas = canvasRef.current;
   if (!canvas) return;
 
@@ -65,150 +43,36 @@ useEffect(() => {
 
 }, [backgroundColor]);
 
-const clearCanvas = () => {
-  const canvas = canvasRef.current;
-  if (!canvas) return;
-
-  const ctx = canvas.getContext('2d');
-  if (ctx) {
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-  }
-};
-
-
-// return where input device event point
-const getEventPoint = useCallback((event: MouseEvent | TouchEvent) => {
-  const canvas = canvasRef.current;
-  if (!canvas) return { x: 0, y: 0 };
-
-  const rect = canvas.getBoundingClientRect();
-  
-  if ('touches' in event) {
-    return {
-      x: event.touches[0].clientX - rect.left,
-      y: event.touches[0].clientY - rect.top
-    };
-  }
-
-  return {
-    x: event.clientX - rect.left,
-    y: event.clientY - rect.top
-  };
-}, []);
-
-
-// start drawing
-const startDrawing = useCallback((event: MouseEvent | TouchEvent) => {
-  event.preventDefault();
-  setIsDrawing(true);
-  const point = getEventPoint(event);
-  setCurrentPath([point]);
-  const canvas = canvasRef.current;
-  if (!canvas) return;
-
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  ctx.beginPath();
-  ctx.moveTo(point.x, point.y);
-}, [getEventPoint]);
-
-
-// draw function
-const draw = useCallback((event: MouseEvent | TouchEvent) => {
-  event.preventDefault();
-  
-  if (!isDrawing) return;
-
-  const point = getEventPoint(event);
-  setCurrentPath((prev) => [...prev, point]);
-  const canvas = canvasRef.current;
-  if (!canvas) return;
-
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-
-  if (tool === 'eraser') {
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.lineWidth = 100; // Much larger eraser
-  } else {
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.strokeStyle = getPenColor();
-    ctx.lineWidth = 3; // Pen Size
-  }
-
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.lineTo(point.x, point.y);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(point.x, point.y);
-}, [isDrawing, tool, getEventPoint, backgroundColor]);
-
-
-// to stop drwaing
-const stopDrawing = useCallback(() => {
-  setIsDrawing(false);
-  setPaths((prev) => [...prev, currentPath]);
-  setCurrentPath([]);
-  
-}, [currentPath]);
-console.log("After Set Current Path:", paths)
-
-
-// redraw sketch using path
-const redrawPaths = useCallback(() => {
-const canvas = canvasRef.current;
-if (!canvas) return;
-const ctx = canvas.getContext('2d');
-if (!ctx) return;
-
-ctx.clearRect(0, 0, canvas.width, canvas.height);
-ctx.fillStyle = backgroundColor;
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-console.log("Inside redraw:", paths)
-paths.forEach(path => {
-  if (path.length === 0) return;
-  ctx.beginPath();
-  ctx.moveTo(path[0].x, path[0].y);
-  for (let i = 1; i < path.length; i++) {
-    ctx.lineTo(path[i].x, path[i].y);
-  }
-  ctx.strokeStyle = getPenColor();
-  ctx.lineWidth = 3;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.stroke();
-});
-}, [paths, backgroundColor, getPenColor]);
-
 useEffect(() => {
   const canvas = canvasRef.current;
   if (!canvas) return;
 
+  
+  const handleDraw = (event: MouseEvent | TouchEvent) => {
+    draw(event, tool);
+  };
+
   // Mouse events
   canvas.addEventListener('mousedown', startDrawing);
-  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mousemove', handleDraw);
   canvas.addEventListener('mouseup', stopDrawing);
   canvas.addEventListener('mouseout', stopDrawing);
 
   // Touch events
   canvas.addEventListener('touchstart', startDrawing);
-  canvas.addEventListener('touchmove', draw);
+  canvas.addEventListener('touchmove', handleDraw);
   canvas.addEventListener('touchend', stopDrawing);
 
   return () => {
     canvas.removeEventListener('mousedown', startDrawing);
-    canvas.removeEventListener('mousemove', draw);
+    canvas.removeEventListener('mousemove', handleDraw);
     canvas.removeEventListener('mouseup', stopDrawing);
     canvas.removeEventListener('mouseout', stopDrawing);
     canvas.removeEventListener('touchstart', startDrawing);
-    canvas.removeEventListener('touchmove', draw);
+    canvas.removeEventListener('touchmove', handleDraw);
     canvas.removeEventListener('touchend', stopDrawing);
   };
 }, [startDrawing, draw, stopDrawing, redrawPaths]);
-
 
 return (
   <div className="relative w-screen h-screen overflow-hidden"
