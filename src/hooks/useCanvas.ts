@@ -60,7 +60,7 @@ export function useCanvas(backgroundColor: string) {
       if (tool == 'eraser') {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = backgroundColor;
-        ctx.lineWidth = 300;
+        ctx.lineWidth = 100;
       } else {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = getPenColor();
@@ -124,7 +124,7 @@ export function useCanvas(backgroundColor: string) {
         ctx.lineWidth = 3;
       } else {
         ctx.strokeStyle = backgroundColor;
-        ctx.lineWidth = 300;
+        ctx.lineWidth = 100;
       }
 
       ctx.lineCap = 'round';
