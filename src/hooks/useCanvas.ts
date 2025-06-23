@@ -28,11 +28,12 @@ export function useCanvas(backgroundColor: string) {
   }, []);
 
 //   start Drawing
-  const startDrawing = useCallback((event: MouseEvent | TouchEvent) => {
+  const startDrawing = useCallback((event: MouseEvent | TouchEvent,  tool: 'pen' | 'eraser') => {
     event.preventDefault();
     setIsDrawing(true);
     const point = getEventPoint(event);
-    setCurrentPath([point]);
+    console.log(tool);
+    if (tool == 'pen') setCurrentPath([point]);
 
     const ctx = canvasRef.current?.getContext('2d');
     ctx?.beginPath();
@@ -47,14 +48,16 @@ export function useCanvas(backgroundColor: string) {
       if (!isDrawing) return;
 
       const point = getEventPoint(event);
-      setCurrentPath((prev) => [...prev, point]);
+
+      if (tool == 'pen') setCurrentPath((prev) => [...prev, point]);
 
       const ctx = canvasRef.current?.getContext('2d');
       if (!ctx) return;
 
       if (tool === 'eraser') {
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.lineWidth = 100;
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = backgroundColor;
+        ctx.lineWidth = 300;
       } else {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = getPenColor();
