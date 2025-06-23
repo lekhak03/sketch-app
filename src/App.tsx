@@ -39,7 +39,7 @@ const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
     ctx.fillStyle = backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
-  if (paths) redrawPaths(tool);
+  if (paths) redrawPaths();
 
 }, [backgroundColor]);
 
@@ -56,30 +56,30 @@ useEffect(() => {
     startDrawing(event, tool);
   };
 
-  const handleStopDrawing = (event: MouseEvent | TouchEvent, tool: 'pen' | 'eraser') => {
-    stopDrawing(tool);
+  const handleStopDrawing = () => {
+    stopDrawing();
   };
 
 
   // Mouse events
   canvas.addEventListener('mousedown', handleStartDrawing);
   canvas.addEventListener('mousemove', handleDraw);
-  canvas.addEventListener('mouseup', (e) => handleStopDrawing(e, tool));
-  canvas.addEventListener('mouseout', (e) => handleStopDrawing(e, tool));
+  canvas.addEventListener('mouseup', handleStopDrawing);
+  canvas.addEventListener('mouseout', handleStopDrawing);
 
   // Touch events
   canvas.addEventListener('touchstart', handleStartDrawing);
   canvas.addEventListener('touchmove', handleDraw);
-  canvas.addEventListener('touchend', (e) => handleStopDrawing(e, tool));
+  canvas.addEventListener('touchend', handleStopDrawing);
 
   return () => {
     canvas.removeEventListener('mousedown', handleStartDrawing);
     canvas.removeEventListener('mousemove', handleDraw);
-    canvas.removeEventListener('mouseup', (e) => handleStopDrawing(e, tool));
-    canvas.removeEventListener('mouseout', (e) => handleStopDrawing(e, tool));
+    canvas.removeEventListener('mouseup', handleStopDrawing);
+    canvas.removeEventListener('mouseout',handleStopDrawing);
     canvas.removeEventListener('touchstart', handleStartDrawing);
     canvas.removeEventListener('touchmove', handleDraw);
-    canvas.removeEventListener('touchend', (e) => handleStopDrawing(e, tool));
+    canvas.removeEventListener('touchend', handleStopDrawing);
   };
 }, [startDrawing, draw, stopDrawing, redrawPaths]);
 

@@ -1,6 +1,8 @@
 import { useRef, useState, useCallback } from 'react';
 
-export type Point = { x: number; y: number };
+export type Tool = 'pen' | 'eraser';
+
+export type Point = { x: number; y: number , tool: Tool};
 
 export function useCanvas(backgroundColor: string) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -11,7 +13,7 @@ export function useCanvas(backgroundColor: string) {
   const getPenColor = () =>
     backgroundColor === '#1a1a1a' ? '#ffffff' : '#000000';
 
-  const getEventPoint = useCallback((event: MouseEvent | TouchEvent): Point => {
+  const getEventPoint = useCallback((event: MouseEvent | TouchEvent, tool: Tool): Point => {
     const canvas = canvasRef.current;
     const rect = canvas!.getBoundingClientRect();
 
@@ -19,21 +21,22 @@ export function useCanvas(backgroundColor: string) {
       return {
         x: event.touches[0].clientX - rect.left,
         y: event.touches[0].clientY - rect.top,
+        tool: tool
       };
     }
     return {
       x: event.clientX - rect.left,
       y: event.clientY - rect.top,
+      tool: tool
     };
   }, []);
 
 //   start Drawing
-  const startDrawing = useCallback((event: MouseEvent | TouchEvent,  tool: 'pen' | 'eraser') => {
+  const startDrawing = useCallback((event: MouseEvent | TouchEvent,  tool: Tool) => {
     event.preventDefault();
     setIsDrawing(true);
-    const point = getEventPoint(event);
-    console.log(tool);
-    if (tool == 'pen') setCurrentPath([point]);
+    const point = getEventPoint(event, tool);
+    setCurrentPath([point]);
 
     const ctx = canvasRef.current?.getContext('2d');
     ctx?.beginPath();
@@ -47,14 +50,14 @@ export function useCanvas(backgroundColor: string) {
       event.preventDefault();
       if (!isDrawing) return;
 
-      const point = getEventPoint(event);
+      const point = getEventPoint(event, tool);
 
-      if (tool == 'pen') setCurrentPath((prev) => [...prev, point]);
+      setCurrentPath((prev) => [...prev, point]);
 
       const ctx = canvasRef.current?.getContext('2d');
       if (!ctx) return;
 
-      if (tool === 'eraser') {
+      if (tool == 'eraser') {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = backgroundColor;
         ctx.lineWidth = 300;
@@ -95,29 +98,43 @@ export function useCanvas(backgroundColor: string) {
 
 // redraw paths when background changes
   const redrawPaths = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+  const canvas = canvasRef.current;
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = backgroundColor;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = backgroundColor;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    paths.forEach((path) => {
-      if (path.length === 0) return;
+  paths.forEach((path) => {
+    if (path.length < 2) return;
+
+    for (let i = 1; i < path.length; i++) {
+      const prev = path[i - 1];
+      const curr = path[i];
+      if (prev.tool != curr.tool) continue;
+
       ctx.beginPath();
-      ctx.moveTo(path[0].x, path[0].y);
-      for (let i = 1; i < path.length; i++) {
-        ctx.lineTo(path[i].x, path[i].y);
+      ctx.moveTo(prev.x, prev.y);
+      ctx.lineTo(curr.x, curr.y);
+
+      if (curr.tool === 'pen') {
+        ctx.strokeStyle = getPenColor();
+        ctx.lineWidth = 3;
+      } else {
+        ctx.strokeStyle = backgroundColor;
+        ctx.lineWidth = 300;
       }
-      ctx.strokeStyle = getPenColor();
-      ctx.lineWidth = 3;
+
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.stroke();
-    });
-  };
+    }
+  });
+
+};
+
 
   return {
     canvasRef,
