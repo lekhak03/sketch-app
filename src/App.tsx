@@ -21,6 +21,8 @@ const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
     startDrawing,
     draw,
     paths,
+    currentPath,
+    setCurrentPath,
     stopDrawing,
     clearCanvas,
     redrawPaths,
@@ -30,7 +32,6 @@ const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
   const canvas = canvasRef.current;
   if (!canvas) return;
 
-  // test
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight - footerHeight;
 
@@ -39,15 +40,24 @@ const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
     ctx.fillStyle = backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
-  if (paths) redrawPaths();
+
+  if (paths.length > 0) redrawPaths();
 
 }, [backgroundColor]);
 
+  useEffect(() => {
+    let savedPathsString = localStorage.getItem('drawPaths');
+    const savedPaths = savedPathsString ? JSON.parse(savedPathsString) : [];
+    redrawPaths(savedPaths);
+  }, []);
+
+
+
+// handle the main calls
 useEffect(() => {
   const canvas = canvasRef.current;
   if (!canvas) return;
 
-  
   const handleDraw = (event: MouseEvent | TouchEvent) => {
     draw(event, tool);
   };
@@ -72,6 +82,7 @@ useEffect(() => {
   canvas.addEventListener('touchmove', handleDraw);
   canvas.addEventListener('touchend', handleStopDrawing);
 
+
   return () => {
     canvas.removeEventListener('mousedown', handleStartDrawing);
     canvas.removeEventListener('mousemove', handleDraw);
@@ -83,6 +94,7 @@ useEffect(() => {
   };
 }, [startDrawing, draw, stopDrawing, redrawPaths]);
 
+// Front End
 return (
   <div className="relative w-screen h-screen overflow-hidden"
   style={{ 
