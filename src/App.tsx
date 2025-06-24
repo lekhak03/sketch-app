@@ -21,8 +21,6 @@ const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
     startDrawing,
     draw,
     paths,
-    currentPath,
-    setCurrentPath,
     stopDrawing,
     clearCanvas,
     redrawPaths,

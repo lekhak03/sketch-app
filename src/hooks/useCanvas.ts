@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback } from 'react';
 
 export type Tool = 'pen' | 'eraser';
 
@@ -82,7 +82,13 @@ const stopDrawing = useCallback(() => {
   setIsDrawing(false);
   setPaths((prev) => [...prev, currentPath]);
   setCurrentPath([]);
-  localStorage.setItem("drawPaths", JSON.stringify(paths)); // Save Paths to local storage
+  const data = localStorage.getItem('drawPaths')
+  if (data == null) localStorage.setItem('drawPaths', JSON.stringify(paths)); // Save Paths to local storage
+  else {
+    const existingData = localStorage.getItem('drawPaths');
+    const existingDataParsed = existingData ? JSON.parse(existingData) : [];
+    localStorage.setItem('drawPaths', JSON.stringify(paths.concat(existingDataParsed)));
+  }
 }, [currentPath]);
 
 //   clear canvas
@@ -95,6 +101,7 @@ const clearCanvas = () => {
   ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   setPaths([]);
+  localStorage.clear(); // clear local storage
 };
 
 
@@ -150,8 +157,6 @@ return {
   startDrawing,
   draw,
   paths,
-  currentPath,
-  setCurrentPath,
   stopDrawing,
   clearCanvas,
   redrawPaths,
