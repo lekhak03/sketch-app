@@ -2,7 +2,7 @@
 
 A modern, minimalist web drawing app that lets users sketch with various brush styles, stroke widths, and background colors. Designed to be calm, clean, and responsive — perfect for sketching ideas or digital doodles.
 
-> ⚠️ Real-time sync, storage, and advanced backend features will be added separately — this repository focuses on the **frontend only**.
+> ⚠️ Real-time sync, storage, and advanced backend features will be added separately
 
 ---
 
@@ -45,18 +45,6 @@ A modern, minimalist web drawing app that lets users sketch with various brush s
 - **JavaScript / TypeScript**
 - **Tailwind (Modern UI with smooth UX)**
 - **No frameworks or backend yet**
-
----
-
-## 🧠 Inspiration
-
-Inspired by the simplicity of Apple Notes and the functionality of online sketchpads, this app aims to combine clarity with creativity.
-
----
-
-## 📄 License
-
-MIT License — feel free to use, modify, and share.
 
 ---
 
