@@ -83,11 +83,14 @@ const stopDrawing = useCallback(() => {
   setPaths((prev) => [...prev, currentPath]);
   setCurrentPath([]);
   const data = localStorage.getItem('drawPaths')
-  if (data == null) localStorage.setItem('drawPaths', JSON.stringify(paths)); // Save Paths to local storage
+  if (data == null) {localStorage.setItem('drawPaths', JSON.stringify(paths));
+  } // Save Paths to local storage
   else {
     const existingData = localStorage.getItem('drawPaths');
     const existingDataParsed = existingData ? JSON.parse(existingData) : [];
     localStorage.setItem('drawPaths', JSON.stringify(paths.concat(existingDataParsed)));
+    console.log(JSON.stringify(paths.concat(existingDataParsed)) === JSON.stringify(paths))
+
   }
 }, [currentPath]);
 
@@ -108,7 +111,6 @@ const clearCanvas = () => {
 
 // redraw paths when state changes
 const redrawPaths = (savedPath: Point[][] = []) => {
-  console.log("Redraw is called with: ", savedPath)
   // copy paths
   let updatedPaths = paths
   const canvas = canvasRef.current;
@@ -121,7 +123,6 @@ const redrawPaths = (savedPath: Point[][] = []) => {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   if (savedPath.length > 0) updatedPaths = savedPath;
-  console.log("About to render: ", updatedPaths)
   // paths.forEach((path) => {
   updatedPaths.forEach((path) => {
     if (path.length < 2) return;

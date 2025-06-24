@@ -39,7 +39,11 @@ const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  if (paths.length > 0) redrawPaths();
+  let savedPathsString = localStorage.getItem('drawPaths');
+  const savedPaths = savedPathsString ? JSON.parse(savedPathsString) : [];
+
+  if (savedPaths.length > 0) redrawPaths(savedPaths)
+  else redrawPaths(paths)
 
 }, [backgroundColor]);
 
@@ -64,31 +68,28 @@ useEffect(() => {
     startDrawing(event, tool);
   };
 
-  const handleStopDrawing = () => {
-    stopDrawing();
-  };
-
-
   // Mouse events
   canvas.addEventListener('mousedown', handleStartDrawing);
   canvas.addEventListener('mousemove', handleDraw);
-  canvas.addEventListener('mouseup', handleStopDrawing);
-  canvas.addEventListener('mouseout', handleStopDrawing);
+  canvas.addEventListener('mouseup', stopDrawing);
+  canvas.addEventListener('mouseout', stopDrawing);
+  canvas.addEventListener('mousedown', stopDrawing);
 
   // Touch events
   canvas.addEventListener('touchstart', handleStartDrawing);
   canvas.addEventListener('touchmove', handleDraw);
-  canvas.addEventListener('touchend', handleStopDrawing);
+  canvas.addEventListener('touchend', stopDrawing);
 
 
   return () => {
     canvas.removeEventListener('mousedown', handleStartDrawing);
     canvas.removeEventListener('mousemove', handleDraw);
-    canvas.removeEventListener('mouseup', handleStopDrawing);
-    canvas.removeEventListener('mouseout',handleStopDrawing);
+    canvas.removeEventListener('mouseup', stopDrawing);
+    canvas.removeEventListener('mouseout',stopDrawing);
+    canvas.removeEventListener('mousedown', stopDrawing);
     canvas.removeEventListener('touchstart', handleStartDrawing);
     canvas.removeEventListener('touchmove', handleDraw);
-    canvas.removeEventListener('touchend', handleStopDrawing);
+    canvas.removeEventListener('touchend', stopDrawing);
   };
 }, [startDrawing, draw, stopDrawing, redrawPaths]);
 
@@ -167,7 +168,7 @@ return (
 
   {/* Footer */}
     <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-500 italic px-3 pointer-events-none select-none">
-    Made by Deep Lekhak
+    Made By Lekhak
     </div>
   </div>
 );
