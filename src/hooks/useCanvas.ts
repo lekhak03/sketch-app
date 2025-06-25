@@ -92,7 +92,6 @@ const stopDrawing = useCallback(() => {
     const existingData = localStorage.getItem('drawPaths');
     const existingDataParsed = existingData ? JSON.parse(existingData) : [];
     localStorage.setItem('drawPaths', JSON.stringify(paths.concat(existingDataParsed)));
-    console.log(JSON.stringify(paths.concat(existingDataParsed)) === JSON.stringify(paths))
 
   }
 }, [currentPath]);

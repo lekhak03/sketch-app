@@ -92,11 +92,11 @@ useEffect(() => {
   };
 }, [startDrawing, draw, stopDrawing, redrawPaths]);
 
-useEffect(() => {
-  const item = localStorage.getItem('drawPaths');
-  const savedPaths = item ? JSON.parse(item) : [];
-  console.log(savedPaths.length)
-}, [stopDrawing])
+// useEffect(() => {
+//   const item = localStorage.getItem('drawPaths');
+//   const savedPaths = item ? JSON.parse(item) : [];
+//   console.log(savedPaths.length)
+// }, [stopDrawing])
 
 // Front End
 return (
