@@ -78,6 +78,9 @@ const draw = useCallback(
 );
 
 //   stops drawing
+// to be fix: Since we are using multiple addEventListeners, we are creating duplicate elements, 
+// storage goes up, so only store if data is unique, by searching equating with the previous saved
+
 const stopDrawing = useCallback(() => {
   setIsDrawing(false);
   setPaths((prev) => [...prev, currentPath]);

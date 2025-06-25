@@ -68,12 +68,12 @@ useEffect(() => {
     startDrawing(event, tool);
   };
 
+
   // Mouse events
   canvas.addEventListener('mousedown', handleStartDrawing);
   canvas.addEventListener('mousemove', handleDraw);
   canvas.addEventListener('mouseup', stopDrawing);
-  canvas.addEventListener('mouseout', stopDrawing);
-  canvas.addEventListener('mousedown', stopDrawing);
+  canvas.addEventListener('click', stopDrawing); 
 
   // Touch events
   canvas.addEventListener('touchstart', handleStartDrawing);
@@ -85,13 +85,18 @@ useEffect(() => {
     canvas.removeEventListener('mousedown', handleStartDrawing);
     canvas.removeEventListener('mousemove', handleDraw);
     canvas.removeEventListener('mouseup', stopDrawing);
-    canvas.removeEventListener('mouseout',stopDrawing);
-    canvas.removeEventListener('mousedown', stopDrawing);
     canvas.removeEventListener('touchstart', handleStartDrawing);
     canvas.removeEventListener('touchmove', handleDraw);
     canvas.removeEventListener('touchend', stopDrawing);
+    canvas.removeEventListener('click', stopDrawing);
   };
 }, [startDrawing, draw, stopDrawing, redrawPaths]);
+
+useEffect(() => {
+  const item = localStorage.getItem('drawPaths');
+  const savedPaths = item ? JSON.parse(item) : [];
+  console.log(savedPaths.length)
+}, [stopDrawing])
 
 // Front End
 return (
