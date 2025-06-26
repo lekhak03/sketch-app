@@ -86,6 +86,7 @@ function App() {
     canvas.addEventListener('touchstart', handleStartDrawing);
     canvas.addEventListener('touchmove', handleDraw);
     canvas.addEventListener('touchend', stopDrawing);
+    canvas.addEventListener('touchcancel', stopDrawing);
 
 
     return () => {
@@ -99,6 +100,7 @@ function App() {
       canvas.removeEventListener('mouseover', stopDrawing);
       canvas.removeEventListener('click', stopDrawing);
       canvas.removeEventListener('touchend', stopDrawing);
+      canvas.removeEventListener('touchcancel', stopDrawing);
 
 
       // drawing touch
