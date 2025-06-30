@@ -1,7 +1,10 @@
 import { useRef, useState, useCallback } from 'react';
 import { deduplicatePaths  } from './duplicateStrokes';
 import { writeData } from './setRealtimeDb'
-
+import { firebaseConfig } from './databaseConfig';
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, onValue, get} from "firebase/database";
+const app = initializeApp(firebaseConfig);
 // for private self hosted server
 // url of the server
 // const URL = "ws://localhost:8080"
@@ -87,25 +90,53 @@ export function useCanvas(backgroundColor: string) {
     setIsDrawing(false);
     setPaths((prev) => [...prev, currentPath]);
     setCurrentPath([]);
-    const data = localStorage.getItem('drawPaths')
-    if (data == null) {
-      localStorage.setItem('drawPaths', JSON.stringify(paths));
-      console.log("Data Sent: Empty Array")
-      writeData(paths); // writes to firebase real time server
-    }
-    
-    else {
-      const existingData = localStorage.getItem('drawPaths'); // get any stored data
-      const existingDataParsed = existingData ? JSON.parse(existingData) : []; // parse string into array
-      const dataToBeSaved = deduplicatePaths(paths, existingDataParsed); // remove any duplicates
 
-      localStorage.setItem('drawPaths', dataToBeSaved); // save the data
-      console.log("Data Sent: Not Empty Array")
-      writeData(paths);  // writes to firebase real time server
-
+    // get database data
+  const db = getDatabase();
+  get(ref(db, 'paths/'))
+  .then((snapshot) => {
+    if (snapshot.exists()) {
+      const dbData = snapshot.val();
+      if (dbData != null) {
+        // Database has data — render and merge
+        const pathsFromDatabase: Point[][] = Object.values((dbData as any).drawpaths);
+        const data = localStorage.getItem('drawPaths');
+        if (data == null) {
+          // No localStorage data yet
+          const dataToBeSavedOnLS = paths.concat(pathsFromDatabase);
+          localStorage.setItem('drawPaths', JSON.stringify(dataToBeSavedOnLS));
+          redrawPaths(dataToBeSavedOnLS);
+          writeData(dataToBeSavedOnLS);
+        } else {
+          const existingDataParsed = JSON.parse(data);
+          const dataToBeSavedOnLS = paths.concat(existingDataParsed, pathsFromDatabase);
+          const dataToBeOnLS = deduplicatePaths(paths, dataToBeSavedOnLS);
+          localStorage.setItem('drawPaths', JSON.stringify(dataToBeOnLS));
+          redrawPaths(JSON.parse(dataToBeOnLS));
+          writeData(JSON.parse(dataToBeOnLS));
+        }
+      } else {
+        // No data in database, fallback to local storage
+        const localData = localStorage.getItem('drawPaths');
+        const existingDataParsed = localData ? JSON.parse(localData) : [];
+        const dataToBeSaved = deduplicatePaths(paths, existingDataParsed);
+        localStorage.setItem('drawPaths', JSON.stringify(dataToBeSaved));
+        writeData(JSON.parse(dataToBeSaved));
+      }
+    } else { // snapshot DNE, database == null
+        const localData = localStorage.getItem('drawPaths');
+        const existingDataParsed = localData ? JSON.parse(localData) : [];
+        const dataToBeSaved = deduplicatePaths(paths, existingDataParsed);
+        localStorage.setItem('drawPaths', JSON.stringify(dataToBeSaved));
+        writeData(JSON.parse(dataToBeSaved));
+    };
+  })
+.catch((error) => {
+    console.error("Error getting data:", error);
+  });
+  
       // for self hosted server, !firebase
       // if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(paths.concat(existingDataParsed)));
-    }
   }, [currentPath]);
 
   //   clear canvas
@@ -120,6 +151,7 @@ export function useCanvas(backgroundColor: string) {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     setPaths([]);
     localStorage.removeItem('drawPaths'); // clear drawPaths from local storage
+    writeData([]); // send empty to clear, subject to change
   };
 
   // redraw paths when state changes

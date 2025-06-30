@@ -6,9 +6,11 @@ import { firebaseConfig } from './databaseConfig';
 
 initializeApp(firebaseConfig);
 
-const db = getDatabase();
-const starCountRef = ref(db, 'paths/');
-onValue(starCountRef, (snapshot) => {
-  const data = snapshot.val();
-  console.log(data)
-});
+export function getFromDatabase() {
+  const db = getDatabase();
+  const starCountRef = ref(db, 'paths/');
+  onValue(starCountRef, (snapshot) => {
+    const data = snapshot.val();
+    return data;
+  });
+}
