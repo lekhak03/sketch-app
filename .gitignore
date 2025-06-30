@@ -27,4 +27,4 @@ dist-ssr
 # custom
 temp.ts
 backend/
-src/hooks/databaseConfig.ts
+
