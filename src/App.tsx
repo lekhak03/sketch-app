@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Brush, Eraser, Trash2 } from 'lucide-react';
 import { useCanvas } from './hooks/useCanvas';
+import { initializeApp } from "firebase/app";
+import { getDatabase, ref, onValue} from "firebase/database";
+import { firebaseConfig } from './hooks/databaseConfig';
 
 function App() {
 
@@ -11,6 +14,13 @@ function App() {
     { color: '#3b82f6', name: 'Blue' }, // blue
     { color: '#f59e0b', name: 'Yellow' }, // yellow
   ];
+
+  // get db data
+  
+  const db = getDatabase();
+  const starCountRef = ref(db, 'paths/');
+
+  // end of db data code
 
   const currentBackgroundColor = localStorage.getItem('backgroundColor');
   const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
@@ -52,9 +62,18 @@ function App() {
   }, [backgroundColor, startDrawing]);
 
   useEffect(() => {
+    onValue(starCountRef, (snapshot) => {
+    const data = snapshot.val();
+    let savedPathsString = localStorage.getItem('drawPaths');
+    const savedPaths = savedPathsString ? JSON.parse(savedPathsString) : [];
+    if (data != null) redrawPaths(savedPaths.concat(data));
+    else {
     let savedPathsString = localStorage.getItem('drawPaths');
     const savedPaths = savedPathsString ? JSON.parse(savedPathsString) : [];
     redrawPaths(savedPaths);
+    }
+    });
+
   }, []);
 
   // handle the main calls
