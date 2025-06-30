@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Brush, Eraser, Trash2 } from 'lucide-react';
 import { useCanvas } from './hooks/useCanvas';
-import { getDatabase, ref, onValue} from "firebase/database";
+// import { getDatabase, ref, onValue} from "firebase/database";
 
 
 function App() {
@@ -16,8 +16,8 @@ function App() {
 
   // get db data
   
-  const db = getDatabase();
-  const starCountRef = ref(db, 'paths/');
+  // const db = getDatabase();
+  // const starCountRef = ref(db, 'paths/');
 
   // end of db data code
 

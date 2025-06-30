@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback } from 'react';
 import { deduplicatePaths  } from './duplicateStrokes';
-import { writeData } from './setRealtimeDb'
+// import { writeData } from './setRealtimeDb'
 
 // for private self hosted server
 // url of the server
@@ -90,7 +90,7 @@ export function useCanvas(backgroundColor: string) {
     const data = localStorage.getItem('drawPaths')
     if (data == null) {
       localStorage.setItem('drawPaths', JSON.stringify(paths));
-      console.log("Data Sent: Empty Array")
+      // console.log("Data Sent: Empty Array")
       // writeData(paths); // writes to firebase real time server
     }
     
@@ -100,7 +100,7 @@ export function useCanvas(backgroundColor: string) {
       const dataToBeSaved = deduplicatePaths(paths, existingDataParsed); // remove any duplicates
 
       localStorage.setItem('drawPaths', dataToBeSaved); // save the data
-      console.log("Data Sent: Not Empty Array")
+      // console.log("Data Sent: Not Empty Array")
       // writeData(paths);  // writes to firebase real time server
 
       // for self hosted server, !firebase
