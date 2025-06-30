@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Brush, Eraser, Trash2 } from 'lucide-react';
 import { useCanvas } from './hooks/useCanvas';
-import { initializeApp } from "firebase/app";
 import { getDatabase, ref, onValue} from "firebase/database";
-import { firebaseConfig } from './hooks/databaseConfig';
+
 
 function App() {
 
