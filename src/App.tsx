@@ -61,18 +61,16 @@ function App() {
   }, [backgroundColor, startDrawing]);
 
   useEffect(() => {
-    onValue(starCountRef, (snapshot) => {
-    const data = snapshot.val();
-    let savedPathsString = localStorage.getItem('drawPaths');
-    const savedPaths = savedPathsString ? JSON.parse(savedPathsString) : [];
-    if (data != null) redrawPaths(savedPaths.concat(data));
-    else {
+    // onValue(starCountRef, (snapshot) => {
+    // const data = snapshot.val();
+    // let savedPathsString = localStorage.getItem('drawPaths');
+    // const savedPaths = savedPathsString ? JSON.parse(savedPathsString) : [];
+    // if (data != null) redrawPaths(savedPaths.concat(data));
+    // else {
     let savedPathsString = localStorage.getItem('drawPaths');
     const savedPaths = savedPathsString ? JSON.parse(savedPathsString) : [];
     redrawPaths(savedPaths);
-    }
-    });
-
+    // }
   }, []);
 
   // handle the main calls

@@ -91,7 +91,7 @@ export function useCanvas(backgroundColor: string) {
     if (data == null) {
       localStorage.setItem('drawPaths', JSON.stringify(paths));
       console.log("Data Sent: Empty Array")
-      writeData(paths); // writes to firebase real time server
+      // writeData(paths); // writes to firebase real time server
     }
     
     else {
@@ -101,7 +101,7 @@ export function useCanvas(backgroundColor: string) {
 
       localStorage.setItem('drawPaths', dataToBeSaved); // save the data
       console.log("Data Sent: Not Empty Array")
-      writeData(paths);  // writes to firebase real time server
+      // writeData(paths);  // writes to firebase real time server
 
       // for self hosted server, !firebase
       // if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(paths.concat(existingDataParsed)));
