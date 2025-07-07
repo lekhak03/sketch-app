@@ -15,3 +15,13 @@ export function writeData(paths: Point[][]) {
     drawpaths: paths
   });
 }
+
+// write paths to the DB
+export function writeDataPaths(paths: Point[][]) {
+  const db = getDatabase();
+  const reference = ref(db, 'currentPaths/');
+
+  set(reference, {
+    drawpaths: paths
+  });
+}

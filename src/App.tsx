@@ -52,8 +52,6 @@ function App() {
 
   }, [backgroundColor, startDrawing]);
 
-  useEffect(() => {}, []);
-
   useEffect(() => {
     // let savedPathsString = localStorage.getItem('drawPaths');
     // const savedPaths = savedPathsString ? JSON.parse(savedPathsString) : [];

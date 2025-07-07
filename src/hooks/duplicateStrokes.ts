@@ -63,5 +63,5 @@ export function deduplicatePaths(paths: any, existingDataParsed: any) {
         }
     }
 
-    return JSON.stringify(deduped);
+    return deduped;
 }

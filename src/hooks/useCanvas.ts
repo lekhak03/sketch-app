@@ -1,9 +1,9 @@
 import { useRef, useState, useCallback } from 'react';
 import { deduplicatePaths  } from './duplicateStrokes';
-import { writeData } from './setRealtimeDb'
+import { writeData, writeDataPaths } from './setRealtimeDb'
 import { firebaseConfig } from './databaseConfig';
 import { initializeApp } from "firebase/app";
-import { getDatabase, ref, onValue, get} from "firebase/database";
+import { getDatabase, ref, get} from "firebase/database";
 const app = initializeApp(firebaseConfig);
 // for private self hosted server
 // url of the server
@@ -86,58 +86,68 @@ export function useCanvas(backgroundColor: string) {
     [isDrawing, getEventPoint, backgroundColor]
   );
 
+  // To do:
+  // firebase 2 instances:
+  // Instance 1: real time render, current paths, gets called everytime path updates
+  // Instance 2: persistent storage, gets called 
   const stopDrawing = useCallback(() => {
-    setIsDrawing(false);
-    setPaths((prev) => [...prev, currentPath]);
-    setCurrentPath([]);
+  setIsDrawing(false);
 
-    // get database data
+  const updatedPaths = [...paths, currentPath];
+  setPaths(updatedPaths);
+  setCurrentPath([]);
+
+  // firebase 
   const db = getDatabase();
-  get(ref(db, 'paths/'))
-  .then((snapshot) => {
-    if (snapshot.exists()) {
-      const dbData = snapshot.val();
-      if (dbData != null) {
-        // Database has data — render and merge
+  const dbRefPaths = ref(db, 'paths/');
+  const dbRefCurrentPaths = ref(db, 'currentPaths/')
+
+  get(dbRefPaths)
+    .then((snapshot) => {
+      let finalPaths: Point[][] = [];
+
+      if (snapshot.exists() && snapshot.val() != null) {
+        const dbData = snapshot.val();
         const pathsFromDatabase: Point[][] = Object.values((dbData as any).drawpaths);
-        const data = localStorage.getItem('drawPaths');
-        if (data == null) {
-          // No localStorage data yet
-          const dataToBeSavedOnLS = paths.concat(pathsFromDatabase);
-          localStorage.setItem('drawPaths', JSON.stringify(dataToBeSavedOnLS));
-          redrawPaths(dataToBeSavedOnLS);
-          writeData(dataToBeSavedOnLS);
-        } else {
-          const existingDataParsed = JSON.parse(data);
-          const dataToBeSavedOnLS = paths.concat(existingDataParsed, pathsFromDatabase);
-          const dataToBeOnLS = deduplicatePaths(paths, dataToBeSavedOnLS);
-          localStorage.setItem('drawPaths', JSON.stringify(dataToBeOnLS));
-          redrawPaths(JSON.parse(dataToBeOnLS));
-          writeData(JSON.parse(dataToBeOnLS));
-        }
+
+        // Merge current stroke with existing database data
+        finalPaths = deduplicatePaths(updatedPaths, pathsFromDatabase);
       } else {
-        // No data in database, fallback to local storage
-        const localData = localStorage.getItem('drawPaths');
-        const existingDataParsed = localData ? JSON.parse(localData) : [];
-        const dataToBeSaved = deduplicatePaths(paths, existingDataParsed);
-        localStorage.setItem('drawPaths', JSON.stringify(dataToBeSaved));
-        writeData(JSON.parse(dataToBeSaved));
+        // No existing Firebase data — just use current stroke(s)
+        finalPaths = updatedPaths;
       }
-    } else { // snapshot DNE, database == null
-        const localData = localStorage.getItem('drawPaths');
-        const existingDataParsed = localData ? JSON.parse(localData) : [];
-        const dataToBeSaved = deduplicatePaths(paths, existingDataParsed);
-        localStorage.setItem('drawPaths', JSON.stringify(dataToBeSaved));
-        writeData(JSON.parse(dataToBeSaved));
-    };
-  })
-.catch((error) => {
-    console.error("Error getting data:", error);
-  });
-  
-      // for self hosted server, !firebase
-      // if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(paths.concat(existingDataParsed)));
-  }, [currentPath]);
+
+      redrawPaths(finalPaths);
+      // writeData(finalPaths); // Update Firebase
+    })
+    .catch((error) => {
+      console.error("Error accessing Firebase:", error);
+    });
+
+    get(dbRefCurrentPaths)
+    .then((snapshot) => {
+      let finalPaths: Point[][] = [];
+
+      if (snapshot.exists() && snapshot.val() != null) {
+        const dbData = snapshot.val();
+        const pathsFromDatabase: Point[][] = Object.values((dbData as any).drawpaths);
+
+        // Merge current stroke with existing database data
+        finalPaths = deduplicatePaths(updatedPaths, pathsFromDatabase);
+      } else {
+        // No existing Firebase data — just use current stroke(s)
+        finalPaths = updatedPaths;
+      }
+
+      redrawPaths(finalPaths);
+      writeDataPaths(finalPaths); // Update Firebase
+    })
+    .catch((error) => {
+      console.error("Error accessing Firebase:", error);
+    });
+
+}, [currentPath, paths]);
+
 
   //   clear canvas
   const clearCanvas = () => {
