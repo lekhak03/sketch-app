@@ -1,20 +1,20 @@
 import { getDatabase, ref, set } from 'firebase/database';
-import { Point } from './useCanvas'
+import { Point, Stroke} from './types'
 import { initializeApp } from "firebase/app";
 import { firebaseConfig, firebasePersistentConfig } from './databaseConfig';
 
 // intiliaze the app, doesnt work without it
-const tempDb = initializeApp(firebaseConfig, "tempDb");
-const persistentDb = initializeApp(firebasePersistentConfig);
+export const broadcastDb = initializeApp(firebaseConfig, "tempDb");
+export const persistentDb = initializeApp(firebasePersistentConfig);
 
 
 // write paths to the DB
-export function writeData(paths: Point[][]) {
-  const db = getDatabase(tempDb);
+export function writeData(paths: Stroke) {
+  const db = getDatabase(broadcastDb);
   const reference = ref(db, 'paths/');
 
   set(reference, {
-    drawpaths: paths
+    drawPaths: paths
   });
 }
 
@@ -24,6 +24,6 @@ export function writePersistentData(paths: Point[][]) {
   const reference = ref(db, 'persistentPaths/');
 
   set(reference, {
-    drawpaths: paths
+    drawPaths: paths
   });
 }
