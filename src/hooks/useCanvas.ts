@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback } from 'react';
 import { deduplicatePaths  } from './duplicateStrokes';
-// import { writeData } from './setRealtimeDb'
+import { writeData } from './setRealtimeDb'
 
 // for private self hosted server
 // url of the server
@@ -90,8 +90,6 @@ export function useCanvas(backgroundColor: string) {
     const data = localStorage.getItem('drawPaths')
     if (data == null) {
       localStorage.setItem('drawPaths', JSON.stringify(paths));
-      // console.log("Data Sent: Empty Array")
-      // writeData(paths); // writes to firebase real time server
     }
     
     else {
@@ -99,13 +97,13 @@ export function useCanvas(backgroundColor: string) {
       const existingDataParsed = existingData ? JSON.parse(existingData) : []; // parse string into array
       const dataToBeSaved = deduplicatePaths(paths, existingDataParsed); // remove any duplicates
 
-      localStorage.setItem('drawPaths', dataToBeSaved); // save the data
-      // console.log("Data Sent: Not Empty Array")
-      // writeData(paths);  // writes to firebase real time server
+      localStorage.setItem('drawPaths', dataToBeSaved);
 
       // for self hosted server, !firebase
       // if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(paths.concat(existingDataParsed)));
     }
+    writeData(paths); // writes to firebase real time server
+    // writePersistentData(paths); // writes to firebase real time server
   }, [currentPath]);
 
   //   clear canvas
@@ -121,6 +119,23 @@ export function useCanvas(backgroundColor: string) {
     setPaths([]);
     localStorage.removeItem('drawPaths'); // clear drawPaths from local storage
   };
+
+const exportPng = () => {
+  if (canvasRef.current) {
+    const dataUrl = canvasRef.current.toDataURL('image/png');
+    
+    // Create a temporary anchor element
+    const link = document.createElement('a');
+    document.body.appendChild(link);
+    
+    link.href = dataUrl;
+    link.download = 'canvas-image.png'; 
+    link.click();
+    
+    document.body.removeChild(link);
+  }
+};
+
 
   // redraw paths when state changes
   const redrawPaths = (savedPath: Point[][] = []) => {
@@ -171,6 +186,7 @@ export function useCanvas(backgroundColor: string) {
     paths,
     stopDrawing,
     clearCanvas,
+    exportPng,
     redrawPaths,
     setIsDrawing,
   };

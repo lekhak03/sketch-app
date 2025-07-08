@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Brush, Eraser, Trash2 } from 'lucide-react';
+import { Brush, Eraser, Trash2, Import } from 'lucide-react';
 import { useCanvas } from './hooks/useCanvas';
 // import { getDatabase, ref, onValue} from "firebase/database";
 
@@ -33,6 +33,7 @@ function App() {
     paths,
     stopDrawing,
     clearCanvas,
+    exportPng,
     redrawPaths,
   } = useCanvas(backgroundColor);
 
@@ -61,16 +62,7 @@ function App() {
   }, [backgroundColor, startDrawing]);
 
   useEffect(() => {
-    // onValue(starCountRef, (snapshot) => {
-    // const data = snapshot.val();
-    // let savedPathsString = localStorage.getItem('drawPaths');
-    // const savedPaths = savedPathsString ? JSON.parse(savedPathsString) : [];
-    // if (data != null) redrawPaths(savedPaths.concat(data));
-    // else {
-    let savedPathsString = localStorage.getItem('drawPaths');
-    const savedPaths = savedPathsString ? JSON.parse(savedPathsString) : [];
-    redrawPaths(savedPaths);
-    // }
+
   }, []);
 
   // handle the main calls
@@ -188,10 +180,20 @@ function App() {
       <div className="absolute top-4 right-4">
         <button
           onClick={clearCanvas}
-          className="p-2.5 bg-white/90 backdrop-blur-xl rounded-xl shadow-xl border border-white/20 text-red-500 hover:bg-red-50 hover:text-red-600 transition-all duration-300 ease-out hover:scale-105 active:scale-95"
+          className="p-2.5 bg-white/90 backdrop-blur-xl rounded-xl shadow-xl border border-white/20 text-red-500 hover:bg-red-200 hover:text-red-600 transition-all duration-300 ease-out hover:scale-105 active:scale-95"
           title="Clear All"
         >
           <Trash2 size={18} strokeWidth={1.5} />
+        </button>
+      </div>
+
+      <div className="absolute top-4 right-10">
+        <button
+          onClick={exportPng}
+          className="p-2.5 bg-white/90 mr-5 backdrop-blur-xl rounded-xl shadow-xl border border-white/20 text-green-700 hover:bg-green-200 hover:text-green-600 transition-all duration-300 ease-out hover:scale-105 active:scale-95"
+          title="Clear All"
+        >
+          <Import size={18} strokeWidth={1.5} />
         </button>
       </div>
 
