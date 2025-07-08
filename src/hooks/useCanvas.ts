@@ -103,7 +103,7 @@ export function useCanvas(backgroundColor: string) {
       // if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(paths.concat(existingDataParsed)));
     }
     writeData(paths); // writes to firebase real time server
-    writePersistentData(paths); // writes to firebase real time server
+    // writePersistentData(paths); // writes to firebase real time server
   }, [currentPath]);
 
   //   clear canvas
@@ -135,6 +135,8 @@ const exportPng = () => {
     document.body.removeChild(link);
   }
 };
+
+
   // redraw paths when state changes
   const redrawPaths = (savedPath: Point[][] = []) => {
     // copy paths
