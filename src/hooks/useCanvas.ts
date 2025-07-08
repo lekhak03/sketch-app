@@ -1,11 +1,5 @@
 import { useRef, useState, useCallback } from 'react';
 import { deduplicatePaths  } from './duplicateStrokes';
-import { writeData } from './setRealtimeDb'
-
-// for private self hosted server
-// url of the server
-// const URL = "ws://localhost:8080"
-// const socket = new WebSocket(URL)
 
 export type Tool = 'pen' | 'eraser';
 
@@ -98,12 +92,7 @@ export function useCanvas(backgroundColor: string) {
       const dataToBeSaved = deduplicatePaths(paths, existingDataParsed); // remove any duplicates
 
       localStorage.setItem('drawPaths', dataToBeSaved);
-
-      // for self hosted server, !firebase
-      // if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(paths.concat(existingDataParsed)));
     }
-    writeData(paths); // writes to firebase real time server
-    // writePersistentData(paths); // writes to firebase real time server
   }, [currentPath]);
 
   //   clear canvas
