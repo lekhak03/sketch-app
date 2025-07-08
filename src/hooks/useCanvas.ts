@@ -1,15 +1,15 @@
 import { useRef, useState, useCallback } from 'react';
-import { deduplicatePaths  } from './duplicateStrokes';
-import { writeData, writePersistentData } from './setRealtimeDb'
+import { deduplicatePaths } from './duplicateStrokes';
+import { writeData, writePersistentData, broadcastDb } from './setRealtimeDb'
+import { getDatabase, ref, onValue} from "firebase/database";
+import { Tool, Point, Stroke } from './types'
 
 // for private self hosted server
 // url of the server
 // const URL = "ws://localhost:8080"
 // const socket = new WebSocket(URL)
 
-export type Tool = 'pen' | 'eraser';
-
-export type Point = { x: number; y: number, tool: Tool };
+const clientId = crypto.randomUUID();
 
 export function useCanvas(backgroundColor: string) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -91,7 +91,7 @@ export function useCanvas(backgroundColor: string) {
     if (data == null) {
       localStorage.setItem('drawPaths', JSON.stringify(paths));
     }
-    
+
     else {
       const existingData = localStorage.getItem('drawPaths'); // get any stored data
       const existingDataParsed = existingData ? JSON.parse(existingData) : []; // parse string into array
@@ -102,7 +102,14 @@ export function useCanvas(backgroundColor: string) {
       // for self hosted server, !firebase
       // if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(paths.concat(existingDataParsed)));
     }
-    writeData(paths); // writes to firebase real time server
+    if (currentPath.length > 0) {
+      console.log("Path sent: ", currentPath);
+      const stroke: Stroke = {
+        points: currentPath,
+        clientId: clientId
+      }
+      writeData(stroke);
+    }
     // writePersistentData(paths); // writes to firebase real time server
   }, [currentPath]);
 
@@ -120,21 +127,38 @@ export function useCanvas(backgroundColor: string) {
     localStorage.removeItem('drawPaths'); // clear drawPaths from local storage
   };
 
-const exportPng = () => {
-  if (canvasRef.current) {
-    const dataUrl = canvasRef.current.toDataURL('image/png');
-    
-    // Create a temporary anchor element
-    const link = document.createElement('a');
-    document.body.appendChild(link);
-    
-    link.href = dataUrl;
-    link.download = 'canvas-image.png'; 
-    link.click();
-    
-    document.body.removeChild(link);
+  const exportPng = () => {
+    if (canvasRef.current) {
+      const dataUrl = canvasRef.current.toDataURL('image/png');
+
+      // Create a temporary anchor element
+      const link = document.createElement('a');
+      document.body.appendChild(link);
+
+      link.href = dataUrl;
+      link.download = 'canvas-image.png';
+      link.click();
+
+      document.body.removeChild(link);
+    }
+  };
+
+  const handleDatabaseUpdate = () => {
+    const db = getDatabase(broadcastDb);
+    const dbRef = ref(db, 'paths/');
+    onValue(dbRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const databaseClientId = data['drawPaths']['clientId'];
+        const pathsToBeDrawn = data['drawPaths']['points']
+        if (clientId !== databaseClientId) {
+          console.log("Paths to be redrawn: ", pathsToBeDrawn)
+          // redrawPaths(pathsToBeDrawn);
+        }
+      }
+    });
   }
-};
+
 
 
   // redraw paths when state changes
@@ -151,6 +175,7 @@ const exportPng = () => {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     if (savedPath.length > 0) updatedPaths = savedPath;
+    console.log("Path drwan: ", updatedPaths);
     updatedPaths.forEach((path) => {
       if (path.length < 2) return;
       for (let i = 1; i < path.length; i++) {
@@ -189,5 +214,6 @@ const exportPng = () => {
     exportPng,
     redrawPaths,
     setIsDrawing,
+    handleDatabaseUpdate
   };
 }
