@@ -34,6 +34,7 @@ function App() {
     stopDrawing,
     clearCanvas,
     exportPng,
+    handleDatabaseUpdate,
     redrawPaths,
   } = useCanvas(backgroundColor);
 
@@ -56,13 +57,13 @@ function App() {
     let savedPathsString = localStorage.getItem('drawPaths');
     const savedPaths = savedPathsString ? JSON.parse(savedPathsString) : [];
 
-    if (savedPaths.length > 0) { redrawPaths(savedPaths) }
-    else redrawPaths(paths);
+    // if (savedPaths.length > 0) { redrawPaths(savedPaths) }
+    // else redrawPaths(paths);
 
   }, [backgroundColor, startDrawing]);
 
   useEffect(() => {
-
+    handleDatabaseUpdate();
   }, []);
 
   // handle the main calls

@@ -38,6 +38,7 @@ export function useCanvas(backgroundColor: string) {
     };
   }, []);
 
+
   //   start Drawing
   const startDrawing = useCallback((event: MouseEvent | TouchEvent, tool: Tool) => {
     event.preventDefault();
@@ -70,7 +71,7 @@ export function useCanvas(backgroundColor: string) {
       } else {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = getPenColor();
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
       }
 
       ctx.lineCap = 'round';
@@ -91,19 +92,13 @@ export function useCanvas(backgroundColor: string) {
     if (data == null) {
       localStorage.setItem('drawPaths', JSON.stringify(paths));
     }
-
     else {
       const existingData = localStorage.getItem('drawPaths'); // get any stored data
       const existingDataParsed = existingData ? JSON.parse(existingData) : []; // parse string into array
       const dataToBeSaved = deduplicatePaths(paths, existingDataParsed); // remove any duplicates
-
       localStorage.setItem('drawPaths', dataToBeSaved);
-
-      // for self hosted server, !firebase
-      // if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(paths.concat(existingDataParsed)));
     }
     if (currentPath.length > 0) {
-      console.log("Path sent: ", currentPath);
       const stroke: Stroke = {
         points: currentPath,
         clientId: clientId
@@ -143,6 +138,7 @@ export function useCanvas(backgroundColor: string) {
     }
   };
 
+
   const handleDatabaseUpdate = () => {
     const db = getDatabase(broadcastDb);
     const dbRef = ref(db, 'paths/');
@@ -150,16 +146,16 @@ export function useCanvas(backgroundColor: string) {
       const data = snapshot.val();
       if (data) {
         const databaseClientId = data['drawPaths']['clientId'];
-        const pathsToBeDrawn = data['drawPaths']['points']
         if (clientId !== databaseClientId) {
-          console.log("Paths to be redrawn: ", pathsToBeDrawn)
-          // redrawPaths(pathsToBeDrawn);
+          const points = data['drawPaths']['points'];
+          console.log("Points from the db are: ", points);
+          const pointArray: Point[] = points;
+          const pathsToBeDrawn: Point[][] = [pointArray];
+          redrawPaths(pathsToBeDrawn)
         }
       }
     });
   }
-
-
 
   // redraw paths when state changes
   const redrawPaths = (savedPath: Point[][] = []) => {
@@ -174,9 +170,9 @@ export function useCanvas(backgroundColor: string) {
     ctx.fillStyle = "backgroundColor";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    if (savedPath.length > 0) updatedPaths = savedPath;
-    console.log("Path drwan: ", updatedPaths);
+    if (savedPath.length > 0) { console.log(savedPath); updatedPaths = savedPath};
     updatedPaths.forEach((path) => {
+      console.log("Yes")
       if (path.length < 2) return;
       for (let i = 1; i < path.length; i++) {
         const prev = path[i - 1];
@@ -189,18 +185,16 @@ export function useCanvas(backgroundColor: string) {
 
         if (curr.tool === 'pen') {
           ctx.strokeStyle = getPenColor();
-          ctx.lineWidth = 3;
+          ctx.lineWidth = 2;
         } else {
           ctx.strokeStyle = backgroundColor;
           ctx.lineWidth = 100;
         }
-
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.stroke();
       }
     });
-
   };
 
 
