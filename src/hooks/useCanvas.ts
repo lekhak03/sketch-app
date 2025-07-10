@@ -1,15 +1,10 @@
 import { useRef, useState, useCallback } from 'react';
-import { deduplicatePaths  } from './duplicateStrokes';
-import { writeData } from './setRealtimeDb'
+import { writeData, writePersistentData, broadcastDb } from './setRealtimeDb'
+import { getDatabase, ref, onValue} from "firebase/database";
+import { Tool, Point, Stroke } from './types'
+import { appendToLS, deduplicatePaths } from './utils';
 
-// for private self hosted server
-// url of the server
-// const URL = "ws://localhost:8080"
-// const socket = new WebSocket(URL)
-
-export type Tool = 'pen' | 'eraser';
-
-export type Point = { x: number; y: number, tool: Tool };
+const clientId = crypto.randomUUID();
 
 export function useCanvas(backgroundColor: string) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -37,6 +32,7 @@ export function useCanvas(backgroundColor: string) {
       tool: tool
     };
   }, []);
+
 
   //   start Drawing
   const startDrawing = useCallback((event: MouseEvent | TouchEvent, tool: Tool) => {
@@ -70,7 +66,7 @@ export function useCanvas(backgroundColor: string) {
       } else {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = getPenColor();
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
       }
 
       ctx.lineCap = 'round';
@@ -91,18 +87,23 @@ export function useCanvas(backgroundColor: string) {
     if (data == null) {
       localStorage.setItem('drawPaths', JSON.stringify(paths));
     }
-    
     else {
       const existingData = localStorage.getItem('drawPaths'); // get any stored data
       const existingDataParsed = existingData ? JSON.parse(existingData) : []; // parse string into array
       const dataToBeSaved = deduplicatePaths(paths, existingDataParsed); // remove any duplicates
 
       localStorage.setItem('drawPaths', dataToBeSaved);
-
-      // for self hosted server, !firebase
-      // if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(paths.concat(existingDataParsed)));
     }
-    writeData(paths); // writes to firebase real time server
+      localStorage.setItem('drawPaths', dataToBeSaved);
+      
+    }
+    if (currentPath.length > 0) {
+      const stroke: Stroke = {
+        points: currentPath,
+        clientId: clientId
+      }
+      writeData(stroke);
+    }
     // writePersistentData(paths); // writes to firebase real time server
   }, [currentPath]);
 
@@ -137,6 +138,40 @@ const exportPng = () => {
 };
 
 
+  const exportPng = () => {
+    if (canvasRef.current) {
+      const dataUrl = canvasRef.current.toDataURL('image/png');
+
+      // Create a temporary anchor element
+      const link = document.createElement('a');
+      document.body.appendChild(link);
+
+      link.href = dataUrl;
+      link.download = 'canvas-image.png';
+      link.click();
+
+      document.body.removeChild(link);
+    }
+  };
+
+  const handleDatabaseUpdate = () => {
+    const db = getDatabase(broadcastDb);
+    const dbRef = ref(db, 'paths/');
+    onValue(dbRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const databaseClientId = data['drawPaths']['clientId'];
+        if (clientId !== databaseClientId) {
+          const points = data['drawPaths']['points'];
+          appendToLS('drawPaths' , points)
+          const pointArray: Point[] = points;
+          const pathsToBeDrawn: Point[][] = [pointArray];
+          redrawPaths(pathsToBeDrawn)
+        }
+      }
+    });
+  }
+
   // redraw paths when state changes
   const redrawPaths = (savedPath: Point[][] = []) => {
     // copy paths
@@ -145,12 +180,8 @@ const exportPng = () => {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "backgroundColor";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    if (savedPath.length > 0) updatedPaths = savedPath;
+    
+    if (savedPath.length > 0) { updatedPaths = savedPath};
     updatedPaths.forEach((path) => {
       if (path.length < 2) return;
       for (let i = 1; i < path.length; i++) {
@@ -164,18 +195,16 @@ const exportPng = () => {
 
         if (curr.tool === 'pen') {
           ctx.strokeStyle = getPenColor();
-          ctx.lineWidth = 3;
+          ctx.lineWidth = 2;
         } else {
           ctx.strokeStyle = backgroundColor;
           ctx.lineWidth = 100;
         }
-
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.stroke();
       }
     });
-
   };
 
 
@@ -187,7 +216,9 @@ const exportPng = () => {
     stopDrawing,
     clearCanvas,
     exportPng,
+    exportPng,
     redrawPaths,
     setIsDrawing,
+    handleDatabaseUpdate
   };
 }
