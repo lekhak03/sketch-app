@@ -4,11 +4,6 @@ import { getDatabase, ref, onValue} from "firebase/database";
 import { Tool, Point, Stroke } from './types'
 import { appendToLS, deduplicatePaths } from './utils';
 
-// for private self hosted server
-// url of the server
-// const URL = "ws://localhost:8080"
-// const socket = new WebSocket(URL)
-
 const clientId = crypto.randomUUID();
 
 export function useCanvas(backgroundColor: string) {
@@ -149,7 +144,6 @@ export function useCanvas(backgroundColor: string) {
         if (clientId !== databaseClientId) {
           const points = data['drawPaths']['points'];
           appendToLS('drawPaths' , points)
-          console.log("Points from the db are: ", points);
           const pointArray: Point[] = points;
           const pathsToBeDrawn: Point[][] = [pointArray];
           redrawPaths(pathsToBeDrawn)
@@ -167,9 +161,8 @@ export function useCanvas(backgroundColor: string) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     
-    if (savedPath.length > 0) { console.log(savedPath); updatedPaths = savedPath};
+    if (savedPath.length > 0) { updatedPaths = savedPath};
     updatedPaths.forEach((path) => {
-      console.log("Yes")
       if (path.length < 2) return;
       for (let i = 1; i < path.length; i++) {
         const prev = path[i - 1];
