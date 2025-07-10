@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Brush, Eraser, Trash2, Import } from 'lucide-react';
 import { useCanvas } from './hooks/useCanvas';
-// import { getDatabase, ref, onValue} from "firebase/database";
-
+import { exportPng } from './hooks/utils'
 
 function App() {
 
@@ -13,13 +12,6 @@ function App() {
     { color: '#3b82f6', name: 'Blue' }, // blue
     { color: '#f59e0b', name: 'Yellow' }, // yellow
   ];
-
-  // get db data
-  
-  // const db = getDatabase();
-  // const starCountRef = ref(db, 'paths/');
-
-  // end of db data code
 
   const currentBackgroundColor = localStorage.getItem('backgroundColor');
   const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
@@ -33,7 +25,6 @@ function App() {
     paths,
     stopDrawing,
     clearCanvas,
-    exportPng,
     handleDatabaseUpdate,
     redrawPaths,
   } = useCanvas(backgroundColor);
@@ -57,8 +48,8 @@ function App() {
     let savedPathsString = localStorage.getItem('drawPaths');
     const savedPaths = savedPathsString ? JSON.parse(savedPathsString) : [];
 
-    // if (savedPaths.length > 0) { redrawPaths(savedPaths) }
-    // else redrawPaths(paths);
+    if (savedPaths.length > 0) { redrawPaths(savedPaths) }
+    else redrawPaths(paths);
 
   }, [backgroundColor, startDrawing]);
 
@@ -190,7 +181,7 @@ function App() {
 
       <div className="absolute top-4 right-10">
         <button
-          onClick={exportPng}
+          onClick={ () => exportPng(canvasRef?.current?.toDataURL('image/png') || '')}
           className="p-2.5 bg-white/90 mr-5 backdrop-blur-xl rounded-xl shadow-xl border border-white/20 text-green-700 hover:bg-green-200 hover:text-green-600 transition-all duration-300 ease-out hover:scale-105 active:scale-95"
           title="Clear All"
         >
