@@ -25,11 +25,7 @@ function App() {
     paths,
     stopDrawing,
     clearCanvas,
-<<<<<<< HEAD
-    exportPng,
-=======
     handleDatabaseUpdate,
->>>>>>> test-branch
     redrawPaths,
   } = useCanvas(backgroundColor);
 
@@ -58,11 +54,7 @@ function App() {
   }, [backgroundColor, startDrawing]);
 
   useEffect(() => {
-<<<<<<< HEAD
-
-=======
     handleDatabaseUpdate();
->>>>>>> test-branch
   }, []);
 
   // handle the main calls
@@ -189,11 +181,7 @@ function App() {
 
       <div className="absolute top-4 right-10">
         <button
-<<<<<<< HEAD
-          onClick={exportPng}
-=======
           onClick={ () => exportPng(canvasRef?.current?.toDataURL('image/png') || '')}
->>>>>>> test-branch
           className="p-2.5 bg-white/90 mr-5 backdrop-blur-xl rounded-xl shadow-xl border border-white/20 text-green-700 hover:bg-green-200 hover:text-green-600 transition-all duration-300 ease-out hover:scale-105 active:scale-95"
           title="Clear All"
         >

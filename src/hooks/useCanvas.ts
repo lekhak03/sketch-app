@@ -1,10 +1,14 @@
 import { useRef, useState, useCallback } from 'react';
-import { writeData, writePersistentData, broadcastDb } from './setRealtimeDb'
+import { writeData } from './setRealtimeDb'
 import { getDatabase, ref, onValue} from "firebase/database";
 import { Tool, Point, Stroke } from './types'
 import { appendToLS, deduplicatePaths } from './utils';
+import { firebaseConfig } from './databaseConfig';
+import { initializeApp } from 'firebase/app';
 
 const clientId = crypto.randomUUID();
+
+const broadcastDb = initializeApp(firebaseConfig)
 
 export function useCanvas(backgroundColor: string) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -79,7 +83,7 @@ export function useCanvas(backgroundColor: string) {
     [isDrawing, getEventPoint, backgroundColor]
   );
 
-  const stopDrawing = useCallback(() => {
+    const stopDrawing = useCallback(() => {
     setIsDrawing(false);
     setPaths((prev) => [...prev, currentPath]);
     setCurrentPath([]);
@@ -91,9 +95,6 @@ export function useCanvas(backgroundColor: string) {
       const existingData = localStorage.getItem('drawPaths'); // get any stored data
       const existingDataParsed = existingData ? JSON.parse(existingData) : []; // parse string into array
       const dataToBeSaved = deduplicatePaths(paths, existingDataParsed); // remove any duplicates
-
-      localStorage.setItem('drawPaths', dataToBeSaved);
-    }
       localStorage.setItem('drawPaths', dataToBeSaved);
       
     }
@@ -106,6 +107,7 @@ export function useCanvas(backgroundColor: string) {
     }
     // writePersistentData(paths); // writes to firebase real time server
   }, [currentPath]);
+
 
   //   clear canvas
   const clearCanvas = () => {
@@ -121,38 +123,7 @@ export function useCanvas(backgroundColor: string) {
     localStorage.removeItem('drawPaths'); // clear drawPaths from local storage
   };
 
-const exportPng = () => {
-  if (canvasRef.current) {
-    const dataUrl = canvasRef.current.toDataURL('image/png');
-    
-    // Create a temporary anchor element
-    const link = document.createElement('a');
-    document.body.appendChild(link);
-    
-    link.href = dataUrl;
-    link.download = 'canvas-image.png'; 
-    link.click();
-    
-    document.body.removeChild(link);
-  }
-};
 
-
-  const exportPng = () => {
-    if (canvasRef.current) {
-      const dataUrl = canvasRef.current.toDataURL('image/png');
-
-      // Create a temporary anchor element
-      const link = document.createElement('a');
-      document.body.appendChild(link);
-
-      link.href = dataUrl;
-      link.download = 'canvas-image.png';
-      link.click();
-
-      document.body.removeChild(link);
-    }
-  };
 
   const handleDatabaseUpdate = () => {
     const db = getDatabase(broadcastDb);
@@ -215,8 +186,6 @@ const exportPng = () => {
     paths,
     stopDrawing,
     clearCanvas,
-    exportPng,
-    exportPng,
     redrawPaths,
     setIsDrawing,
     handleDatabaseUpdate
