@@ -1,3 +1,5 @@
+import { Point } from "./types";
+
 function deepEqualPath(a: any[], b: any[]) {
     if (!Array.isArray(a) || !Array.isArray(b)) return false;
     if (a.length !== b.length) return false;
@@ -64,4 +66,26 @@ export function deduplicatePaths(paths: any, existingDataParsed: any) {
     }
 
     return JSON.stringify(deduped);
+}
+
+
+export const exportPng = (dataUrl: string) => {
+
+    // Create a temporary anchor element
+    const link = document.createElement('a');
+    document.body.appendChild(link);
+
+    link.href = dataUrl;
+    link.download = 'canvas-image.png';
+    link.click();
+
+    document.body.removeChild(link);
+};
+
+export const appendToLS = (key: string, newPath: Point[]) => {
+  const existing: Point[][] = JSON.parse(localStorage.getItem(key) || '[]');
+
+  const updated = [...existing, newPath];
+
+  localStorage.setItem(key, JSON.stringify(updated));
 }
