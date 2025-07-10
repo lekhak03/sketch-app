@@ -1,3 +1,5 @@
+import { Point } from "./types";
+
 function deepEqualPath(a: any[], b: any[]) {
     if (!Array.isArray(a) || !Array.isArray(b)) return false;
     if (a.length !== b.length) return false;
@@ -80,13 +82,10 @@ export const exportPng = (dataUrl: string) => {
     document.body.removeChild(link);
 };
 
+export const appendToLS = (key: string, newPath: Point[]) => {
+  const existing: Point[][] = JSON.parse(localStorage.getItem(key) || '[]');
 
-export const appendToLS = (key: string, newData: Object) => {
-  const existing = JSON.parse(localStorage.getItem(key) || '[]');
+  const updated = [...existing, newPath];
 
-  const cleanedData = deduplicatePaths(existing, newData);
-
-  existing.push(cleanedData);
-
-  localStorage.setItem(key, JSON.stringify(existing));
+  localStorage.setItem(key, JSON.stringify(updated));
 }
