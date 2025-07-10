@@ -32,7 +32,6 @@ function App() {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight - footerHeight;
 
@@ -119,9 +118,12 @@ function App() {
       {/* Canvas */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 cursor-crosshair"
+        className="absolute inset-0"
         style={{
           backgroundColor,
+          cursor: tool === 'eraser'
+            ? "url('/eraser.cur'), auto"
+            : "url('/pencil.cur'), crosshair",
           touchAction: 'none'
         }}
       />
@@ -133,8 +135,8 @@ function App() {
           <button
             onClick={() => setTool('pen')}
             className={`p-2.5 transition-all duration-300 ease-out ${tool === 'pen'
-                ? 'bg-blue-500 text-white shadow-lg scale-105'
-                : 'text-gray-700 hover:bg-gray-50 active:scale-95'
+              ? 'bg-blue-500 text-white shadow-lg scale-105'
+              : 'text-gray-700 hover:bg-gray-50 active:scale-95'
               }`}
           >
             <Brush size={18} strokeWidth={1.5} />
@@ -143,8 +145,8 @@ function App() {
           <button
             onClick={() => setTool('eraser')}
             className={`p-2.5 transition-all duration-300 ease-out ${tool === 'eraser'
-                ? 'bg-blue-500 text-white shadow-lg scale-105'
-                : 'text-gray-700 hover:bg-gray-50 active:scale-95'
+              ? 'bg-blue-500 text-white shadow-lg scale-105'
+              : 'text-gray-700 hover:bg-gray-50 active:scale-95'
               }`}
           >
             <Eraser size={18} strokeWidth={1.5} />
@@ -158,8 +160,8 @@ function App() {
               key={color}
               onClick={() => setBackgroundColor(color)}
               className={`w-7 h-7 rounded-full transition-all duration-300 ease-out hover:scale-110 active:scale-95 ${backgroundColor === color
-                  ? 'ring-2 ring-blue-500 ring-offset-1 shadow-lg scale-110'
-                  : 'ring-1 ring-gray-200 hover:ring-gray-300'
+                ? 'ring-2 ring-blue-500 ring-offset-1 shadow-lg scale-110'
+                : 'ring-1 ring-gray-200 hover:ring-gray-300'
                 }`}
               style={{ backgroundColor: color }}
               title={name}
@@ -181,7 +183,7 @@ function App() {
 
       <div className="absolute top-4 right-10">
         <button
-          onClick={ () => exportPng(canvasRef?.current?.toDataURL('image/png') || '')}
+          onClick={() => exportPng(canvasRef?.current?.toDataURL('image/png') || '')}
           className="p-2.5 bg-white/90 mr-5 backdrop-blur-xl rounded-xl shadow-xl border border-white/20 text-green-700 hover:bg-green-200 hover:text-green-600 transition-all duration-300 ease-out hover:scale-105 active:scale-95"
           title="Clear All"
         >
