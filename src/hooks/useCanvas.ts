@@ -1,8 +1,8 @@
 import { useRef, useState, useCallback } from 'react';
-import { deduplicatePaths } from './duplicateStrokes';
 import { writeData, writePersistentData, broadcastDb } from './setRealtimeDb'
 import { getDatabase, ref, onValue} from "firebase/database";
 import { Tool, Point, Stroke } from './types'
+import { appendToLS, deduplicatePaths } from './utils';
 
 // for private self hosted server
 // url of the server
@@ -97,6 +97,7 @@ export function useCanvas(backgroundColor: string) {
       const existingDataParsed = existingData ? JSON.parse(existingData) : []; // parse string into array
       const dataToBeSaved = deduplicatePaths(paths, existingDataParsed); // remove any duplicates
       localStorage.setItem('drawPaths', dataToBeSaved);
+      
     }
     if (currentPath.length > 0) {
       const stroke: Stroke = {
@@ -138,7 +139,6 @@ export function useCanvas(backgroundColor: string) {
     }
   };
 
-
   const handleDatabaseUpdate = () => {
     const db = getDatabase(broadcastDb);
     const dbRef = ref(db, 'paths/');
@@ -148,6 +148,7 @@ export function useCanvas(backgroundColor: string) {
         const databaseClientId = data['drawPaths']['clientId'];
         if (clientId !== databaseClientId) {
           const points = data['drawPaths']['points'];
+          appendToLS('drawPaths' , points)
           console.log("Points from the db are: ", points);
           const pointArray: Point[] = points;
           const pathsToBeDrawn: Point[][] = [pointArray];
@@ -165,11 +166,7 @@ export function useCanvas(backgroundColor: string) {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "backgroundColor";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+    
     if (savedPath.length > 0) { console.log(savedPath); updatedPaths = savedPath};
     updatedPaths.forEach((path) => {
       console.log("Yes")
