@@ -89,3 +89,25 @@ export const appendToLS = (key: string, newPath: Point[]) => {
 
   localStorage.setItem(key, JSON.stringify(updated));
 }
+
+const averageOfAllPoints = (paths: Point[]) => {
+    let centroidX = 0, centroidY = 0;
+    const pathLength = paths.length
+    for (let index = 0; index < pathLength; index++) {
+        centroidX += paths[index].x != undefined ? paths[index].x : 0;
+        centroidY += paths[index].y != undefined ? paths[index].y : 0;
+    }
+    const centroid: Point = {  
+        x: Math.round(centroidX / pathLength),
+        y: Math.round(centroidY / pathLength),
+        tool: paths[0].tool
+    }
+    
+    return centroid
+}
+
+
+export const isCircle = (paths: Point[]) => {
+    const centroid = averageOfAllPoints(paths)
+    console.log(centroid)
+}

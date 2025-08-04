@@ -2,7 +2,7 @@ import { useRef, useState, useCallback } from 'react';
 import { writeData } from './setRealtimeDb'
 import { getDatabase, ref, onValue} from "firebase/database";
 import { Tool, Point, Stroke } from './types'
-import { appendToLS, deduplicatePaths } from './utils';
+import { appendToLS, deduplicatePaths, isCircle } from './utils';
 import { firebaseConfig } from './databaseConfig';
 import { initializeApp } from 'firebase/app';
 
@@ -63,6 +63,8 @@ export function useCanvas(backgroundColor: string) {
       const ctx = canvasRef.current?.getContext('2d');
       if (!ctx) return;
 
+      
+
       if (tool == 'eraser') {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = backgroundColor;
@@ -106,6 +108,7 @@ export function useCanvas(backgroundColor: string) {
       writeData(stroke);
     }
     // writePersistentData(paths); // writes to firebase real time server
+    redrawAsShape();
   }, [currentPath]);
 
 
@@ -177,6 +180,12 @@ export function useCanvas(backgroundColor: string) {
       }
     });
   };
+
+  const redrawAsShape = () => {
+    const pathShape = currentPath;
+    if (pathShape.length > 0) {isCircle(currentPath); console.log("YES")};
+
+  }
 
 
   return {
