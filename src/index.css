@@ -83,3 +83,12 @@
 .focus-ring {
   @apply focus:outline-none focus:ring-2 focus:ring-ios-blue focus:ring-offset-2;
 }
+
+/* Custom cursor positioning to fix offset */
+.cursor-pen {
+  cursor: url('/pencil.cur') 0 16, crosshair;
+}
+
+.cursor-eraser {
+  cursor: url('/eraser.cur') 8 8, auto;
+}

@@ -2,27 +2,20 @@ import { useEffect, useState } from 'react';
 import { Brush, Eraser, Trash2, Download, Palette, Settings, X, Check } from 'lucide-react';
 import { useCanvas } from './hooks/useCanvas';
 import { exportPng } from './hooks/utils'
+import { ERASER_WIDTH } from './constants';
+import { 
+  backgroundColors, 
+  FOOTER_HEIGHT,
+  cssClasses,
+  getMainContainerStyles,
+  getCanvasStyles,
+  getFooterStyles,
+  getFooterTextStyles,
+  getFooterSecondaryTextStyles,
+  getEraserIndicatorStyles
+} from './homeDesign';
 
 function App() {
-
-  const backgroundColors = [
-    // Neutral colors
-    { color: '#ffffff', name: 'White', category: 'neutral' },
-    { color: '#1a1a1a', name: 'Black', category: 'neutral' },
-    { color: '#F2F2F7', name: 'Light Gray', category: 'neutral' },
-    { color: '#8E8E93', name: 'Gray', category: 'neutral' },
-    
-    // Vibrant colors
-    { color: '#FF3B30', name: 'Red', category: 'vibrant' },
-    { color: '#007AFF', name: 'Blue', category: 'vibrant' },
-    { color: '#FF9500', name: 'Orange', category: 'vibrant' },
-    { color: '#34C759', name: 'Green', category: 'vibrant' },
-    { color: '#AF52DE', name: 'Purple', category: 'vibrant' },
-    { color: '#FF2D92', name: 'Pink', category: 'vibrant' },
-    { color: '#FFCC00', name: 'Yellow', category: 'vibrant' },
-    { color: '#5856D6', name: 'Indigo', category: 'vibrant' },
-  ];
-
   const currentBackgroundColor = localStorage.getItem('backgroundColor');
   const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
   const [backgroundColor, setBackgroundColor] = useState<string>(currentBackgroundColor || '#ffffff');
@@ -30,7 +23,8 @@ function App() {
   const [isExporting, setIsExporting] = useState(false);
   const [showExportSuccess, setShowExportSuccess] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
-  const footerHeight = 40;
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isMouseOverCanvas, setIsMouseOverCanvas] = useState(false);
 
   const {
     canvasRef,
@@ -47,7 +41,7 @@ function App() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight - footerHeight;
+    canvas.height = window.innerHeight - FOOTER_HEIGHT;
 
     const ctx = canvas.getContext('2d');
     if (ctx) {
@@ -66,6 +60,31 @@ function App() {
 
   useEffect(() => {
     handleDatabaseUpdate();
+  }, []);
+
+  // Mouse tracking for eraser indicator
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      setMousePosition({ x: event.clientX, y: event.clientY });
+    };
+
+    const handleMouseEnter = () => {
+      setIsMouseOverCanvas(true);
+    };
+
+    const handleMouseLeave = () => {
+      setIsMouseOverCanvas(false);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseenter', handleMouseEnter);
+    document.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseenter', handleMouseEnter);
+      document.removeEventListener('mouseleave', handleMouseLeave);
+    };
   }, []);
 
   // handle the main calls
@@ -161,48 +180,42 @@ function App() {
   const vibrantColors = backgroundColors.filter(color => color.category === 'vibrant');
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden"
-      style={{
-        backgroundColor,
-        touchAction: 'none'
-      }}>
+    <div className={cssClasses.mainContainer} style={getMainContainerStyles(backgroundColor)}>
       
       {/* Canvas */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0"
-        style={{
-          backgroundColor,
-          cursor: tool === 'eraser'
-            ? "url('/eraser.cur'), auto"
-            : "url('/pencil.cur'), crosshair",
-          touchAction: 'none'
-        }}
+        className={`${cssClasses.canvas} ${tool === 'eraser' ? cssClasses.cursorEraser : cssClasses.cursorPen}`}
+        style={getCanvasStyles(backgroundColor)}
       />
 
+      {/* Eraser Indicator Circle */}
+      {tool === 'eraser' && isMouseOverCanvas && (
+        <div 
+          className={cssClasses.eraserIndicator}
+          style={getEraserIndicatorStyles(backgroundColor, mousePosition, ERASER_WIDTH)}
+        />
+      )}
+
       {/* Top Toolbar - Modern iOS Style */}
-      <div className="absolute top-6 left-1/2 transform -translate-x-1/2 flex items-center gap-4 animate-fade-in">
+      <div className={cssClasses.toolbar}>
         
         {/* Tool Selection */}
-        <div className="flex bg-white/80 backdrop-blur-xl rounded-2xl shadow-ios-lg border border-white/40 overflow-hidden">
+        <div className={cssClasses.toolSelection}>
           <button
             onClick={() => setTool('pen')}
-            className={`px-4 py-3 transition-all duration-300 ease-out flex items-center gap-2 ${
-              tool === 'pen'
-                ? 'bg-ios-blue text-white shadow-lg'
-                : 'text-ios-gray-700 hover:bg-ios-gray-50 active:scale-95'
+            className={`${cssClasses.toolButton} ${
+              tool === 'pen' ? cssClasses.toolButtonActive : cssClasses.toolButtonInactive
             }`}
           >
             <Brush size={20} strokeWidth={2} />
             <span className="text-sm font-medium">Pen</span>
           </button>
-          <div className="w-px bg-ios-gray-200"></div>
+          <div className={cssClasses.toolDivider}></div>
           <button
             onClick={() => setTool('eraser')}
-            className={`px-4 py-3 transition-all duration-300 ease-out flex items-center gap-2 ${
-              tool === 'eraser'
-                ? 'bg-ios-blue text-white shadow-lg'
-                : 'text-ios-gray-700 hover:bg-ios-gray-50 active:scale-95'
+            className={`${cssClasses.toolButton} ${
+              tool === 'eraser' ? cssClasses.toolButtonActive : cssClasses.toolButtonInactive
             }`}
           >
             <Eraser size={20} strokeWidth={2} />
@@ -213,7 +226,7 @@ function App() {
         {/* Color Picker Toggle */}
         <button
           onClick={() => setShowColorPicker(!showColorPicker)}
-          className="color-toggle p-3 bg-white/80 backdrop-blur-xl rounded-2xl shadow-ios-lg border border-white/40 text-ios-gray-700 hover:bg-ios-gray-50 transition-all duration-300 ease-out hover:scale-105 active:scale-95"
+          className={cssClasses.colorToggleButton}
         >
           <Palette size={20} strokeWidth={2} />
         </button>
@@ -222,14 +235,12 @@ function App() {
         <button
           onClick={handleExport}
           disabled={isExporting}
-          className={`p-3 bg-white/80 backdrop-blur-xl rounded-2xl shadow-ios-lg border border-white/40 transition-all duration-300 ease-out hover:scale-105 active:scale-95 ${
-            isExporting 
-              ? 'text-ios-gray-400 cursor-not-allowed' 
-              : 'text-ios-green hover:bg-ios-green/10'
+          className={`${cssClasses.actionButton} ${
+            isExporting ? cssClasses.exportButtonDisabled : cssClasses.exportButton
           }`}
         >
           {isExporting ? (
-            <div className="w-5 h-5 border-2 border-ios-gray-300 border-t-ios-green rounded-full animate-spin"></div>
+            <div className={`${cssClasses.loadingSpinner} ${cssClasses.exportSpinner}`}></div>
           ) : (
             <Download size={20} strokeWidth={2} />
           )}
@@ -239,14 +250,12 @@ function App() {
         <button
           onClick={handleClear}
           disabled={isClearing}
-          className={`p-3 bg-white/80 backdrop-blur-xl rounded-2xl shadow-ios-lg border border-white/40 transition-all duration-300 ease-out hover:scale-105 active:scale-95 ${
-            isClearing 
-              ? 'text-ios-gray-400 cursor-not-allowed' 
-              : 'text-ios-red hover:bg-ios-red/10'
+          className={`${cssClasses.actionButton} ${
+            isClearing ? cssClasses.clearButtonDisabled : cssClasses.clearButton
           }`}
         >
           {isClearing ? (
-            <div className="w-5 h-5 border-2 border-ios-gray-300 border-t-ios-red rounded-full animate-spin"></div>
+            <div className={`${cssClasses.loadingSpinner} ${cssClasses.clearSpinner}`}></div>
           ) : (
             <Trash2 size={20} strokeWidth={2} />
           )}
@@ -255,8 +264,8 @@ function App() {
 
       {/* Export Success Toast */}
       {showExportSuccess && (
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 animate-slide-up">
-          <div className="bg-ios-green/90 backdrop-blur-xl rounded-2xl shadow-ios-lg border border-ios-green/20 px-4 py-3 flex items-center gap-2">
+        <div className={cssClasses.successToast}>
+          <div className={cssClasses.successToastContent}>
             <Check size={16} className="text-white" />
             <span className="text-white text-sm font-medium">Image exported successfully!</span>
           </div>
@@ -265,23 +274,23 @@ function App() {
 
       {/* Enhanced Color Picker Panel - Fixed Positioning */}
       {showColorPicker && (
-        <div className="absolute top-24 left-1/2 transform -translate-x-1/2 color-picker">
-          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-ios-xl border border-white/40 p-6 max-w-sm animate-scale-in">
+        <div className={cssClasses.colorPicker}>
+          <div className={cssClasses.colorPickerContent}>
             {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-ios-gray-900">Background Color</h3>
+            <div className={cssClasses.colorPickerHeader}>
+              <h3 className={cssClasses.colorPickerTitle}>Background Color</h3>
               <button
                 onClick={() => setShowColorPicker(false)}
-                className="p-1 rounded-full hover:bg-ios-gray-100 transition-colors"
+                className={cssClasses.colorPickerCloseButton}
               >
                 <X size={16} className="text-ios-gray-500" />
               </button>
             </div>
 
             {/* Neutral Colors */}
-            <div className="mb-4">
-              <h4 className="text-sm font-medium text-ios-gray-600 mb-2">Neutral</h4>
-              <div className="flex flex-wrap gap-2">
+            <div className={cssClasses.colorSection}>
+              <h4 className={cssClasses.colorSectionTitle}>Neutral</h4>
+              <div className={cssClasses.colorGrid}>
                 {neutralColors.map(({ color, name }) => (
                   <button
                     key={color}
@@ -289,10 +298,10 @@ function App() {
                       setBackgroundColor(color);
                       setShowColorPicker(false);
                     }}
-                    className={`w-10 h-10 rounded-xl transition-all duration-300 ease-out hover:scale-110 active:scale-95 ${
+                    className={`${cssClasses.colorButton} ${
                       backgroundColor === color
-                        ? 'ring-3 ring-ios-blue ring-offset-2 shadow-lg scale-110'
-                        : 'ring-1 ring-ios-gray-200 hover:ring-ios-gray-300'
+                        ? cssClasses.colorButtonActive
+                        : cssClasses.colorButtonInactive
                     }`}
                     style={{ backgroundColor: color }}
                     title={name}
@@ -303,8 +312,8 @@ function App() {
 
             {/* Vibrant Colors */}
             <div>
-              <h4 className="text-sm font-medium text-ios-gray-600 mb-2">Vibrant</h4>
-              <div className="flex flex-wrap gap-2">
+              <h4 className={cssClasses.colorSectionTitle}>Vibrant</h4>
+              <div className={cssClasses.colorGrid}>
                 {vibrantColors.map(({ color, name }) => (
                   <button
                     key={color}
@@ -312,10 +321,10 @@ function App() {
                       setBackgroundColor(color);
                       setShowColorPicker(false);
                     }}
-                    className={`w-10 h-10 rounded-xl transition-all duration-300 ease-out hover:scale-110 active:scale-95 ${
+                    className={`${cssClasses.colorButton} ${
                       backgroundColor === color
-                        ? 'ring-3 ring-ios-blue ring-offset-2 shadow-lg scale-110'
-                        : 'ring-1 ring-ios-gray-200 hover:ring-ios-gray-300'
+                        ? cssClasses.colorButtonActive
+                        : cssClasses.colorButtonInactive
                     }`}
                     style={{ backgroundColor: color }}
                     title={name}
@@ -328,38 +337,29 @@ function App() {
       )}
 
       {/* Bottom Status Bar - iOS Style with Dynamic Background */}
-      <div 
-        className="absolute bottom-0 left-0 right-0 backdrop-blur-xl"
-        style={{
-          backgroundColor: backgroundColor === '#1a1a1a' 
-            ? 'rgba(26, 26, 26, 0.8)' 
-            : backgroundColor === '#ffffff'
-            ? 'rgba(255, 255, 255, 0.8)'
-            : `${backgroundColor}CC`
-        }}
-      >
-        <div className="flex items-center justify-between px-6 py-3">
-          <div className="flex items-center gap-2" style={{ color: backgroundColor === '#1a1a1a' ? '#ffffff' : '#374151' }}>
-            <div className={`w-2 h-2 rounded-full ${tool === 'pen' ? 'bg-ios-blue' : 'bg-ios-gray-400'}`}></div>
-            <span className="text-sm font-medium">{tool === 'pen' ? 'Drawing' : 'Erasing'}</span>
+      <div className={cssClasses.footer} style={getFooterStyles(backgroundColor)}>
+        <div className={cssClasses.footerContent}>
+          <div className={cssClasses.footerStatus} style={getFooterTextStyles(backgroundColor)}>
+            <div className={`${cssClasses.footerStatusDot} ${tool === 'pen' ? 'bg-ios-blue' : 'bg-ios-gray-400'}`}></div>
+            <span className={cssClasses.footerStatusText}>{tool === 'pen' ? 'Drawing' : 'Erasing'}</span>
           </div>
           
-          <div className="text-xs font-medium" style={{ color: backgroundColor === '#1a1a1a' ? '#9CA3AF' : '#6B7280' }}>
+          <div className={cssClasses.footerCredit} style={getFooterSecondaryTextStyles(backgroundColor)}>
             Made with ❤️ by Lekhak
           </div>
           
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-ios-green"></div>
-            <span className="text-sm font-medium" style={{ color: backgroundColor === '#1a1a1a' ? '#ffffff' : '#374151' }}>Connected</span>
+          <div className={cssClasses.footerConnection}>
+            <div className={`${cssClasses.footerStatusDot} bg-ios-green`}></div>
+            <span className={cssClasses.footerStatusText} style={getFooterTextStyles(backgroundColor)}>Connected</span>
           </div>
         </div>
       </div>
 
       {/* Floating Action Button for Mobile */}
-      <div className="fixed bottom-20 right-6 md:hidden">
+      <div className={cssClasses.fab}>
         <button
           onClick={() => setShowColorPicker(!showColorPicker)}
-          className="w-14 h-14 bg-ios-blue rounded-full shadow-ios-xl text-white flex items-center justify-center transition-all duration-300 ease-out hover:scale-110 active:scale-95"
+          className={cssClasses.fabButton}
         >
           <Palette size={24} strokeWidth={2} />
         </button>

@@ -5,6 +5,7 @@ import { Tool, Point, Stroke } from './types'
 import { appendToLS, deduplicatePaths, isCircle } from './utils';
 import { firebaseConfig } from './databaseConfig';
 import { initializeApp } from 'firebase/app';
+import { ERASER_WIDTH } from '../constants';
 
 const clientId = crypto.randomUUID();
 
@@ -68,7 +69,7 @@ export function useCanvas(backgroundColor: string) {
       if (tool == 'eraser') {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = backgroundColor;
-        ctx.lineWidth = 100;
+        ctx.lineWidth = ERASER_WIDTH;
       } else {
         ctx.globalCompositeOperation = 'source-over';
         ctx.strokeStyle = getPenColor();

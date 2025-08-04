@@ -109,5 +109,6 @@ const averageOfAllPoints = (paths: Point[]) => {
 
 export const isCircle = (paths: Point[]) => {
     const centroid = averageOfAllPoints(paths)
-    console.log(centroid)
+    const radius = Math.sqrt(Math.pow(paths[0].x - centroid.x, 2) + Math.pow(paths[0].y - centroid.y, 2))
+    console.log(radius)
 }
