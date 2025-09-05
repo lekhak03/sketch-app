@@ -1,6 +1,6 @@
 // config from Firebase SDK
 export const firebaseConfig = {
-  apiKey: "AIzaSyBaTd79Pfm2nGHR45c6OQsr8qLHTLngq9c",
+  apiKey: "", // get the key, null for security
   authDomain: "sketch-pad-c3f3b.firebaseapp.com",
   projectId: "sketch-pad-c3f3b",
   storageBucket: "sketch-pad-c3f3b.firebasestorage.app",
