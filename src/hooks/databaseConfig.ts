@@ -1,6 +1,6 @@
 // config from Firebase SDK
 export const firebaseConfig = {
-  apiKey: "", // get the key, null for security
+  apiKey: "AIzaSyBaTd79Pfm2nGHR45c6OQsr8qLHTLngq9c", // firebase db is set to false
   authDomain: "sketch-pad-c3f3b.firebaseapp.com",
   projectId: "sketch-pad-c3f3b",
   storageBucket: "sketch-pad-c3f3b.firebasestorage.app",
