@@ -8,12 +8,6 @@ A modern, minimalist web drawing app that lets users sketch with various brush s
 
 ## 🎨 Features
 
-- 🖌️ **Brush Tools**  
-  Choose from multiple brush styles like pen, marker, and calligraphy.
-
-- 📏 **Custom Stroke Widths**  
-  Adjustable stroke thickness for fine or bold lines.
-
 - 🧽 **Eraser Tool**  
   Easily switch between drawing and erasing.
 
@@ -45,6 +39,5 @@ A modern, minimalist web drawing app that lets users sketch with various brush s
 - **JavaScript / TypeScript**
 - **Tailwind (Modern UI with smooth UX)**
 - **No frameworks or backend yet**
-
 ---
 
