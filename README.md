@@ -1,43 +1,82 @@
-# ✏️ Minimal Drawing App
+# Sketch App Backend
 
-A modern, minimalist web drawing app that lets users sketch with various brush styles, stroke widths, and background colors. Designed to be calm, clean, and responsive — perfect for sketching ideas or digital doodles.
+This repository contains the backend logic for a collaborative sketch/drawing application. It provides hooks and utilities for managing canvas drawing, local storage, real-time database sync (Firebase), and basic shape detection.
 
-> ⚠️ Real-time sync, storage, and advanced backend features will be added separately
+## Features
 
----
+- **Canvas Drawing Hook**: React hook (`useCanvas`) for handling drawing, erasing, and path management on an HTML canvas.
+- **Local Storage Sync**: Automatically saves and deduplicates drawn paths in browser local storage.
+- **Firebase Realtime Database Sync**: Broadcasts and receives drawing data for collaboration.
+- **Shape Detection Utility**: Includes a basic function for detecting circles from drawn points.
+- **Export Functionality**: Export the canvas as a PNG image.
 
-## 🎨 Features
+## File Structure
 
-- 🧽 **Eraser Tool**  
-  Easily switch between drawing and erasing.
+```
+src/
+  hooks/
+    useCanvas.ts      # Main React hook for canvas logic
+    utils.ts          # Utility functions for paths, local storage, export, and shape detection
+    types.ts          # Type definitions for Point, Tool, Stroke, etc.
+    setRealtimeDb.js  # JS module for writing data to Firebase
+    writeData.d.ts    # TypeScript declaration for writeData
+    databaseConfig.ts # Firebase config
+  constants.ts        # Drawing constants (e.g., eraser width)
+```
 
-- 🌈 **Background Colors**  
-  Choose from modern, calm tones: white, black, yellow, orange, blue, and gray.
+## Key Modules
 
-- 💻 **Responsive Design**  
-  Optimized for desktop and tablet devices.
+### `useCanvas.ts`
 
-- ✨ **Minimalist Aesthetic**  
-  Clean layout, smooth transitions, and no clutter.
+- Provides the `useCanvas` hook for React components.
+- Handles mouse/touch events for drawing and erasing.
+- Manages state for paths and current drawing.
+- Syncs paths to local storage and Firebase.
+- Redraws canvas on state changes.
 
----
+### `utils.ts`
 
-## 🚧 Planned Backend (Not Included Yet)
+- `deduplicatePaths`: Removes duplicate paths when saving to local storage.
+- `appendToLS`: Appends new paths to local storage.
+- `exportPng`: Exports the canvas as a PNG image.
+- `isCircle`: Attempts to detect if a drawn path is a circle.
 
-> Backend features will be implemented separately and are not part of this repo:
+### `setRealtimeDb.js`
 
-- 🔄 Real-time drawing sync (multi-device rendering)
-- 💾 Local and cloud storage
-- ⚡ Caching and session handling
-- 📡 Live collaboration
+- Handles writing drawing data to Firebase Realtime Database.
 
----
+### `types.ts`
 
-## 📦 Tech Stack
+- Defines TypeScript types for points, tools, strokes, etc.
 
-- **HTML5 Canvas**
-- **JavaScript / TypeScript**
-- **Tailwind (Modern UI with smooth UX)**
-- **No frameworks or backend yet**
----
+## Getting Started
 
+1. **Install dependencies**  
+   ```bash
+   npm install
+   ```
+
+2. **Configure Firebase**  
+   Update `databaseConfig.ts` with your Firebase project credentials.
+
+3. **Usage in React**  
+   Import and use the `useCanvas` hook in your component:
+   ```typescript
+   import { useCanvas } from './hooks/useCanvas';
+
+   const { ...canvasMethods } = useCanvas('#ffffff');
+   ```
+
+## Development
+
+- Written in TypeScript (except for Firebase write logic, which is in JS).
+- Designed for use in React projects.
+- Tested on Mac (VS Code recommended).
+
+## License
+
+MIT
+
+## Author
+
+[Your Name]
