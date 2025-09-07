@@ -76,7 +76,3 @@ src/
 ## License
 
 MIT
-
-## Author
-
-[Your Name]
