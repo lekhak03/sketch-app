@@ -1,6 +1,6 @@
-# Sketch App Backend
+# Sketch App
 
-This repository contains the backend logic for a collaborative sketch/drawing application. It provides hooks and utilities for managing canvas drawing, local storage, real-time database sync (Firebase), and basic shape detection.
+This repository is of a collaborative sketch/drawing application. It provides hooks and utilities for managing canvas drawing, local storage, real-time database sync (Firebase), and basic shape detection.
 
 ## Features
 
