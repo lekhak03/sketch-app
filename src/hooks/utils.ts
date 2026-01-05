@@ -83,11 +83,11 @@ export const exportPng = (dataUrl: string) => {
 };
 
 export const appendToLS = (key: string, newPath: Point[]) => {
-  const existing: Point[][] = JSON.parse(localStorage.getItem(key) || '[]');
+    const existing: Point[][] = JSON.parse(localStorage.getItem(key) || '[]');
 
-  const updated = [...existing, newPath];
+    const updated = [...existing, newPath];
 
-  localStorage.setItem(key, JSON.stringify(updated));
+    localStorage.setItem(key, JSON.stringify(updated));
 }
 
 const averageOfAllPoints = (paths: Point[]) => {
@@ -97,12 +97,12 @@ const averageOfAllPoints = (paths: Point[]) => {
         centroidX += paths[index].x != undefined ? paths[index].x : 0;
         centroidY += paths[index].y != undefined ? paths[index].y : 0;
     }
-    const centroid: Point = {  
+    const centroid: Point = {
         x: Math.round(centroidX / pathLength),
         y: Math.round(centroidY / pathLength),
         tool: paths[0].tool
     }
-    
+
     return centroid
 }
 
@@ -121,7 +121,7 @@ function doLinesIntersect(p1: Point, q1: Point, p2: Point, q2: Point): boolean {
     // Check if point q lies on segment pr
     const onSegment = (p: Point, q: Point, r: Point): boolean => {
         return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) &&
-               q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
+            q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
     };
 
     const o1 = orientation(p1, q1, p2);
@@ -150,7 +150,7 @@ function pathCrossesItself(paths: Point[]): boolean {
         for (let j = i + 2; j < paths.length - 1; j++) {
             // Skip adjacent segments (they naturally connect)
             if (j === i + 1) continue;
-            
+
             const line1Start = paths[i];
             const line1End = paths[i + 1];
             const line2Start = paths[j];
@@ -168,36 +168,42 @@ function pathCrossesItself(paths: Point[]): boolean {
 // check whether a shape is a circle or not
 export const isCircle = (paths: Point[]) => {
     if (paths.length < 10) return false; // Need minimum points for reliable detection
-    
+
     // NECESSARY CONDITION: Path must cross itself for it to be a closed circle
     if (!pathCrossesItself(paths)) {
         return false;
     }
-    
+
     // find the center of all points
     const centroid = averageOfAllPoints(paths);
-    
-    // Sample points in criss-cross pattern - take 10 evenly distributed points
-    const samplePoints: Point[] = [];
-    const totalPoints = paths.length;
-    
-    for (let i = 0; i < 20; i++) {
-        const index = Math.floor((i * totalPoints) / 10);
-        if (index < totalPoints) {
-            samplePoints.push(paths[index]);
-        }
-    }
-    // Calculate distances from centroid to each sampled point
-    const distances = samplePoints.map(point => 
+
+    // Calculate distances from centroid to all points
+    const distances = paths.map(point => 
         Math.sqrt(Math.pow(point.x - centroid.x, 2) + Math.pow(point.y - centroid.y, 2))
     );
-    
+
     // Calculate average radius
     const avgRadius = distances.reduce((sum, dist) => sum + dist, 0) / distances.length;
-    
+
+    const angleBins = 36; // 10° per bin
+    const bins = new Array(angleBins).fill(0);
+
+    for (let i = 0; i < paths.length; i++) {
+        const p = paths[i];
+        const angle = Math.atan2(p.y - centroid.y, p.x - centroid.x);
+        const normalized = angle < 0 ? angle + Math.PI * 2 : angle;
+        const bin = Math.floor((normalized / (Math.PI * 2)) * angleBins);
+        bins[bin]++;
+    }
+    console.log(bins)
+    const filledBins = bins.filter(b => b > 0).length;
+    const angularCoverage = filledBins / angleBins;
+
     // Check if all distances are within tolerance of average radius (±20% tolerance)
-    const tolerance = avgRadius * 10;
-    const isCircular = distances.every(dist => Math.abs(dist - avgRadius) <= tolerance);
-        
-    return { isCircular, avgRadius };
+    const tolerance = avgRadius * 0.8
+    let isCircular = distances.every(dist => Math.abs(dist - avgRadius) <= tolerance);
+    if (angularCoverage < 0.9) isCircular = !isCircular;
+    if (angularCoverage > 0.9) isCircular = true;
+
+    return { isCircular, avgRadius, centroid };
 }

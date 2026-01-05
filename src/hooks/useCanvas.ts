@@ -16,6 +16,8 @@ export function useCanvas(backgroundColor: string) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [paths, setPaths] = useState<Point[][]>([]);
   const [currentPath, setCurrentPath] = useState<Point[]>([]);
+  const [snapToShape, setSnapToShape] = useState(false);
+
 
   const getPenColor = () =>
     backgroundColor === '#1a1a1a' ? '#ffffff' : '#000000';
@@ -90,6 +92,8 @@ export function useCanvas(backgroundColor: string) {
     setIsDrawing(false);
     setPaths((prev) => [...prev, currentPath]);
     setCurrentPath([]);
+    redrawAsShape();
+    convertToShape();
     const data = localStorage.getItem('drawPaths')
     if (data == null) {
       localStorage.setItem('drawPaths', JSON.stringify(paths));
@@ -184,9 +188,56 @@ export function useCanvas(backgroundColor: string) {
 
   const redrawAsShape = () => {
     const pathShape = currentPath;
-    if (pathShape.length > 0) {isCircle(currentPath); console.log("YES")};
+    if (pathShape.length > 0) {isCircle(currentPath);};
 
   }
+
+  const convertToShape = () => {
+    const isCircleResult = isCircle(currentPath);
+    
+    if (isCircleResult && isCircleResult.isCircular) {
+      // Remove the last drawn path (the hand-drawn circle)
+      setPaths(prev => prev.slice(0, -1));
+      
+      // Generate perfect circle points
+      const circlePoints = generateCirclePoints(
+        isCircleResult.centroid.x, 
+        isCircleResult.centroid.y, 
+        isCircleResult.avgRadius
+      );
+      
+      // Add the perfect circle as a new path
+      setPaths(prev => [...prev, circlePoints]);
+      redrawPaths(paths);
+      console.log("PATHS REDRAWN")
+
+      // Update localStorage with the new paths
+      const updatedPaths = [...paths.slice(0, -1), circlePoints];
+      localStorage.setItem('drawPaths', JSON.stringify(updatedPaths));
+      // redrawPaths();
+      window.location.reload();
+    }
+  };
+
+  // Helper function to generate circle points
+  const generateCirclePoints = (centerX: number, centerY: number, radius: number): Point[] => {
+    const points: Point[] = [];
+    const numPoints = 100; // Number of points to create smooth circle
+    
+    for (let i = 0; i <= numPoints; i++) {
+      const angle = (i / numPoints) * 2 * Math.PI;
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+      
+      points.push({
+        x: Math.round(x),
+        y: Math.round(y),
+        tool: 'pen' // Use pen tool for the perfect circle
+      });
+    }
+    
+    return points;
+  };
 
 
   return {
@@ -198,6 +249,8 @@ export function useCanvas(backgroundColor: string) {
     clearCanvas,
     redrawPaths,
     setIsDrawing,
-    handleDatabaseUpdate
+    handleDatabaseUpdate,
+    convertToShape,
+    snapToShape
   };
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Brush, Eraser, Trash2, Download, Palette, Settings, X, Check } from 'lucide-react';
+import { Brush, Eraser, Trash2, Download, Palette, X, Check, Zap } from 'lucide-react';
 import { useCanvas } from './hooks/useCanvas';
 import { exportPng } from './hooks/utils'
 import { ERASER_WIDTH } from './constants';
@@ -35,6 +35,8 @@ function App() {
     clearCanvas,
     handleDatabaseUpdate,
     redrawPaths,
+  convertToShape,
+  snapToShape
   } = useCanvas(backgroundColor);
 
   useEffect(() => {
@@ -103,6 +105,7 @@ function App() {
     // Mouse events
     canvas.addEventListener('mousedown', handleStartDrawing);
     canvas.addEventListener('mousemove', handleDraw);
+    
     canvas.addEventListener('mouseup', stopDrawing);
     canvas.addEventListener('mouseout', stopDrawing);
     canvas.addEventListener('mouseover', stopDrawing);
@@ -132,7 +135,7 @@ function App() {
       canvas.removeEventListener('touchstart', handleStartDrawing);
       canvas.removeEventListener('touchmove', handleDraw);
     };
-  }, [startDrawing, draw, stopDrawing, redrawPaths]);
+  }, [startDrawing, draw, stopDrawing, redrawPaths, convertToShape]);
 
   // Close color picker when clicking outside
   useEffect(() => {
@@ -175,6 +178,18 @@ function App() {
       setIsClearing(false);
     }
   };
+
+    const handleSnapToShape = async () => {
+    setIsClearing(true);
+    try {
+      convertToShape();
+      // Add a small delay for visual feedback
+      // await new Promise(resolve => setTimeout(resolve, 300));
+    } finally {
+      // setIsClearing(false);
+    }
+  };
+
 
   const neutralColors = backgroundColors.filter(color => color.category === 'neutral');
   const vibrantColors = backgroundColors.filter(color => color.category === 'vibrant');
@@ -220,6 +235,17 @@ function App() {
           >
             <Eraser size={20} strokeWidth={2} />
             <span className="text-sm font-medium">Eraser</span>
+          </button>
+          <div className={cssClasses.toolDivider}></div>
+          <button
+            onClick={handleSnapToShape}
+            className={`${cssClasses.toolButton} ${
+              snapToShape ? cssClasses.toolButtonActive : cssClasses.toolButtonInactive
+            }`}
+            title="Snap to Shape"
+          >
+            <Zap size={20} strokeWidth={2} />
+            <span className="text-sm font-medium">Shape</span>
           </button>
         </div>
 
