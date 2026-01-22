@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Brush, Eraser, Trash2, Download, Palette, X, Check, Zap } from 'lucide-react';
+import { Brush, Eraser, Trash2, Download, Palette, Circle, Square, X, Check } from 'lucide-react';
 import { useCanvas } from './hooks/useCanvas';
 import { exportPng } from './hooks/utils'
 import { ERASER_WIDTH } from './constants';
+import { Tool } from './hooks/types';
 import { 
   backgroundColors, 
   FOOTER_HEIGHT,
@@ -17,7 +18,7 @@ import {
 
 function App() {
   const currentBackgroundColor = localStorage.getItem('backgroundColor');
-  const [tool, setTool] = useState<'pen' | 'eraser'>('pen');
+  const [tool, setTool] = useState<Tool>('pen');
   const [backgroundColor, setBackgroundColor] = useState<string>(currentBackgroundColor || '#ffffff');
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -31,12 +32,12 @@ function App() {
     startDrawing,
     draw,
     paths,
+    shapes,
     stopDrawing,
     clearCanvas,
     handleDatabaseUpdate,
     redrawPaths,
-  convertToShape,
-  snapToShape
+    redrawAll,
   } = useCanvas(backgroundColor);
 
   useEffect(() => {
@@ -52,13 +53,10 @@ function App() {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    let savedPathsString = localStorage.getItem('drawPaths');
-    const savedPaths = savedPathsString ? JSON.parse(savedPathsString) : [];
+    // Redraw using the current state (which is now initialized from localStorage)
+    redrawAll(paths, shapes);
 
-    if (savedPaths.length > 0) { redrawPaths(savedPaths) }
-    else redrawPaths(paths);
-
-  }, [backgroundColor, startDrawing]);
+  }, [backgroundColor]);
 
   useEffect(() => {
     handleDatabaseUpdate();
@@ -105,12 +103,8 @@ function App() {
     // Mouse events
     canvas.addEventListener('mousedown', handleStartDrawing);
     canvas.addEventListener('mousemove', handleDraw);
-    
     canvas.addEventListener('mouseup', stopDrawing);
     canvas.addEventListener('mouseout', stopDrawing);
-    canvas.addEventListener('mouseover', stopDrawing);
-    canvas.addEventListener('mousedown', stopDrawing);
-    canvas.addEventListener('click', stopDrawing);
 
     // Touch events
     canvas.addEventListener('touchstart', handleStartDrawing);
@@ -124,10 +118,7 @@ function App() {
       canvas.removeEventListener('mousemove', handleDraw);
       // stop drawing
       canvas.removeEventListener('mouseup', stopDrawing);
-      canvas.removeEventListener('mousedown', stopDrawing);
       canvas.removeEventListener('mouseout', stopDrawing);
-      canvas.removeEventListener('mouseover', stopDrawing);
-      canvas.removeEventListener('click', stopDrawing);
       canvas.removeEventListener('touchend', stopDrawing);
       canvas.removeEventListener('touchcancel', stopDrawing);
 
@@ -135,7 +126,7 @@ function App() {
       canvas.removeEventListener('touchstart', handleStartDrawing);
       canvas.removeEventListener('touchmove', handleDraw);
     };
-  }, [startDrawing, draw, stopDrawing, redrawPaths, convertToShape]);
+  }, [startDrawing, draw, stopDrawing, redrawPaths, tool]);
 
   // Close color picker when clicking outside
   useEffect(() => {
@@ -172,27 +163,24 @@ function App() {
     setIsClearing(true);
     try {
       clearCanvas();
-      // Add a small delay for visual feedback
       await new Promise(resolve => setTimeout(resolve, 300));
     } finally {
       setIsClearing(false);
     }
   };
 
-    const handleSnapToShape = async () => {
-    setIsClearing(true);
-    try {
-      convertToShape();
-      // Add a small delay for visual feedback
-      // await new Promise(resolve => setTimeout(resolve, 300));
-    } finally {
-      // setIsClearing(false);
-    }
-  };
-
-
   const neutralColors = backgroundColors.filter(color => color.category === 'neutral');
   const vibrantColors = backgroundColors.filter(color => color.category === 'vibrant');
+
+  const getToolDisplayName = () => {
+    switch (tool) {
+      case 'pen': return 'Drawing';
+      case 'eraser': return 'Erasing';
+      case 'circle': return 'Circle';
+      case 'rectangle': return 'Rectangle';
+      default: return 'Drawing';
+    }
+  };
 
   return (
     <div className={cssClasses.mainContainer} style={getMainContainerStyles(backgroundColor)}>
@@ -238,14 +226,23 @@ function App() {
           </button>
           <div className={cssClasses.toolDivider}></div>
           <button
-            onClick={handleSnapToShape}
+            onClick={() => setTool('circle')}
             className={`${cssClasses.toolButton} ${
-              snapToShape ? cssClasses.toolButtonActive : cssClasses.toolButtonInactive
+              tool === 'circle' ? cssClasses.toolButtonActive : cssClasses.toolButtonInactive
             }`}
-            title="Snap to Shape"
           >
-            <Zap size={20} strokeWidth={2} />
-            <span className="text-sm font-medium">Shape</span>
+            <Circle size={20} strokeWidth={2} />
+            <span className="text-sm font-medium">Circle</span>
+          </button>
+          <div className={cssClasses.toolDivider}></div>
+          <button
+            onClick={() => setTool('rectangle')}
+            className={`${cssClasses.toolButton} ${
+              tool === 'rectangle' ? cssClasses.toolButtonActive : cssClasses.toolButtonInactive
+            }`}
+          >
+            <Square size={20} strokeWidth={2} />
+            <span className="text-sm font-medium">Square</span>
           </button>
         </div>
 
@@ -367,7 +364,7 @@ function App() {
         <div className={cssClasses.footerContent}>
           <div className={cssClasses.footerStatus} style={getFooterTextStyles(backgroundColor)}>
             <div className={`${cssClasses.footerStatusDot} ${tool === 'pen' ? 'bg-ios-blue' : 'bg-ios-gray-400'}`}></div>
-            <span className={cssClasses.footerStatusText}>{tool === 'pen' ? 'Drawing' : 'Erasing'}</span>
+            <span className={cssClasses.footerStatusText}>{getToolDisplayName()}</span>
           </div>
           
           <div className={cssClasses.footerCredit} style={getFooterSecondaryTextStyles(backgroundColor)}>
